@@ -1,5 +1,8 @@
+
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <poll.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -7,75 +10,73 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 int main() {
-    // Create a socket
-    int listening = socket(AF_INET, SOCK_STREAM, 0);
-    if (listening == -1) {
-        std::cout << "Can't create a socket! Quitting" << std::endl;
-        return -1;
+    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == -1) return (1);
+    sockaddr_in serverAddress;
+
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(8080);  // Set your desired port here
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(server_socket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+        std::cerr << "Error binding socket." << std::endl;
+        close(server_socket);
+        return 1;
     }
 
-    // Bind the ip address and port to a socket
-    sockaddr_in hint;
-    hint.sin_family = AF_INET;
-    hint.sin_port = htons(54000);
-    inet_pton(AF_INET, "0.0.0.0", &hint.sin_addr);
-
-    bind(listening, (sockaddr *)&hint, sizeof(hint));
-
-    // Tell Winsock the socket is for listening
-    listen(listening, SOMAXCONN);
-
-    // Wait for a connection
-    sockaddr_in client;
-    socklen_t clientSize = sizeof(client);
-
-    int clientSocket = accept(listening, (sockaddr *)&client, &clientSize);
-
-    char host[NI_MAXHOST];     // Client's remote name
-    char service[NI_MAXSERV];  // Service (i.e. port) the client is connect on
-
-    memset(host, 0, NI_MAXHOST);  // same as memset(host, 0, NI_MAXHOST);
-    memset(service, 0, NI_MAXSERV);
-
-    if (getnameinfo((sockaddr *)&client, sizeof(client), host, NI_MAXHOST, service, NI_MAXSERV,
-                    0) == 0) {
-        std::cout << host << " connected on port " << service << std::endl;
-    } else {
-        inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
-        std::cout << host << " connected on port " << ntohs(client.sin_port) << std::endl;
+    if (listen(server_socket, 5) == -1) {
+        std::cerr << "Error listening on socket." << std::endl;
+        close(server_socket);
+        return 1;
     }
 
-    // Close listening socket
-    close(listening);
-
-    // While loop: accept and echo message back to client
-    char buf[4096];
+    std::vector<pollfd> clientSockets;
+    pollfd serverPollFd;
+    serverPollFd.fd = server_socket;
+    serverPollFd.events = POLLIN;
+    clientSockets.push_back(serverPollFd);
 
     while (true) {
-        memset(buf, 0, 4096);
-
-        // Wait for client to send data
-        int bytesReceived = recv(clientSocket, buf, 4096, 0);
-        if (bytesReceived == -1) {
-            std::cerr << "Error in recv(). Quitting" << std::endl;
+        int activity = poll(clientSockets.data(), clientSockets.size(), -1);
+        if (activity == -1) {
+            std::cerr << "Error in poll." << std::endl;
             break;
         }
 
-        if (bytesReceived == 0) {
-            std::cout << "Client disconnected " << std::endl;
-            break;
+        // Check if there's an incoming connection request on the server socket
+        if (clientSockets[0].revents & POLLIN) {
+            sockaddr_in clientAddress;
+            socklen_t clientAddressLength = sizeof(clientAddress);
+            int newClientSocket =
+                accept(server_socket, (struct sockaddr*)&clientAddress, &clientAddressLength);
+            if (newClientSocket == -1) {
+                std::cerr << "Error accepting connection." << std::endl;
+            } else {
+                std::cout << "New client connected." << std::endl;
+                pollfd newClientPollFd;
+                newClientPollFd.fd = newClientSocket;
+                newClientPollFd.events = POLLIN;
+                clientSockets.push_back(newClientPollFd);
+            }
         }
 
-        std::cout << std::string(buf, 0, bytesReceived) << std::endl;
-
-        // Echo message back to client
-        send(clientSocket, buf, bytesReceived + 1, 0);
+        // Check for data on the client sockets
+        for (size_t i = 1; i < clientSockets.size(); ++i) {
+            if (clientSockets[i].revents & POLLIN) {
+                std::cout << "data" << std::endl;
+                // Handle incoming data from the client at index i
+                // ...
+            }
+        }
     }
 
-    // Close the socket
-    close(clientSocket);
-
+    // Close all client sockets
+    for (size_t i = 1; i < clientSockets.size(); ++i) {
+        close(clientSockets[i].fd);
+    }
+    close(server_socket);
     return 0;
-}
+};

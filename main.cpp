@@ -13,12 +13,13 @@
 #include <vector>
 
 int main() {
+    // AF_INET = IPv4
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) return (1);
-    sockaddr_in serverAddress;
 
+    sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8080);  // Set your desired port here
+    serverAddress.sin_port = htons(8080);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
@@ -66,7 +67,7 @@ int main() {
         // Check for data on the client sockets
         for (size_t i = 1; i < clientSockets.size(); ++i) {
             if (clientSockets[i].revents & POLLIN) {
-                std::cout << "data" << std::endl;
+                std::cout << clientSockets[i].fd;
                 // Handle incoming data from the client at index i
                 // ...
             }

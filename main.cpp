@@ -35,9 +35,9 @@ int main() {
     sockaddr_in server_adress;
     bzero(&server_adress, sizeof(server_adress));
     server_adress.sin_family = AF_INET;
-    server_adress.sin_addr.s_addr = inet_addr(SERVER_ADDR);
+    server_adress.sin_addr.s_addr = inet_addr(SERVER_ADDR);  // only accept connections from this IP
+    // server_adress.sin_addr.s_addr = INADDR_ANY;           // accept connections from any address
     server_adress.sin_port = htons(SERVER_PORT);
-    // server_adress.sin_addr.s_addr = INADDR_ANY;
 
     // ---------------------
     // Binding server fd to server address
@@ -48,7 +48,7 @@ int main() {
         return (1);
     }
     // ---------------------
-    // listen to check if server socket works,
+    // Listen to check if server socket works
     // ---------------------
     if (listen(server_socket_fd, 5) == -1) {
         std::cerr << "Error listening on socket." << std::endl;
@@ -59,7 +59,7 @@ int main() {
     // Displaying info about the server
     // ---------------------
     // Displaying port number 6667 from server class
-    std::cout << "Sever port: " << htons(server_adress.sin_port) << std::endl;
+    std::cout << "Sever Port: " << htons(server_adress.sin_port) << std::endl;
 
     sockaddr_in my_addr;
     unsigned int my_port;

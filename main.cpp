@@ -3,7 +3,6 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <string.h>
-#include <sys/_types/_socklen_t.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -16,6 +15,7 @@
 #define SERVER_PORT 6667
 
 int main() {
+    close(3);
     // ---------------------
     // Setup for Server
     // ---------------------
@@ -111,9 +111,33 @@ int main() {
         // Check for data on the client sockets
         for (size_t i = 1; i < clientSockets.size(); ++i) {
             if (clientSockets[i].revents & POLLIN) {
-                // std::cout << clientSockets[i].fd;
-                // Handle incoming data from the client at index i
-                // ...
+                char buffer[1024];  // Adjust the buffer size as needed
+                ssize_t bytesRead = recv(clientSockets[i].fd, buffer, sizeof(buffer), 0);
+
+                if (bytesRead <= 0) {
+                    if (bytesRead == 0) {
+                        std::cout << "Client disconnected." << std::endl;
+                    } else {
+                        std::cout << "error recv" << std::endl;
+                    }
+                } else {
+                    // Process the received data in the buffer
+                    std::string receivedData(buffer, bytesRead);
+                    std::cout << "Received: " << receivedData << std::endl;
+
+                    // Send NICK and USER
+                    std::string nickname = "IRC Server";
+                    std::string username = "Sergio";
+                    std::string nickCommand = "NICK " + nickname + "\r\n";
+                    std::string userCommand = "USER " + username + " 0 * :" + username + "\r\n";
+                    send(clientSockets[i].fd, nickCommand.c_str(), nickCommand.size(), 0);
+                    send(clientSockets[i].fd, userCommand.c_str(), userCommand.size(), 0);
+
+                    // Assuming the IRC nickname and message to send
+                    std::string message = "You are registered in the system!";
+                    std::string ircMessage = "PRIVMSG " + nickname + " :" + message + "\r\n";
+                    send(clientSockets[i].fd, ircMessage.c_str(), ircMessage.size(), 0);
+                }
             }
         }
     }
@@ -122,6 +146,7 @@ int main() {
     for (size_t i = 1; i < clientSockets.size(); ++i) {
         close(clientSockets[i].fd);
     }
+
     close(server_socket_fd);
     return 0;
 };

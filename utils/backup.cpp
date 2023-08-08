@@ -124,19 +124,20 @@ int main() {
                     // Process the received data in the buffer
                     std::string receivedData(buffer, bytesRead);
                     std::cout << "Received: " << receivedData << std::endl;
+                    std::string response = ":server 001 :Welcome to the IRC server!\r\n";
+                    send(clientSockets[i].fd, response.c_str(), response.size(), 0);
+                    // // Send NICK and USER
+                    // std::string nickname = "IRC Server";
+                    // std::string username = "Sergio";
+                    // std::string nickCommand = "NICK " + nickname + "\r\n";
+                    // std::string userCommand = "USER " + username + " 0 * :" + username + "\r\n";
+                    // send(clientSockets[i].fd, nickCommand.c_str(), nickCommand.size(), 0);
+                    // send(clientSockets[i].fd, userCommand.c_str(), userCommand.size(), 0);
 
-                    // Send NICK and USER
-                    std::string nickname = "IRC Server";
-                    std::string username = "Sergio";
-                    std::string nickCommand = "NICK " + nickname + "\r\n";
-                    std::string userCommand = "USER " + username + " 0 * :" + username + "\r\n";
-                    send(clientSockets[i].fd, nickCommand.c_str(), nickCommand.size(), 0);
-                    send(clientSockets[i].fd, userCommand.c_str(), userCommand.size(), 0);
-
-                    // Assuming the IRC nickname and message to send
-                    std::string message = "You are registered in the system!";
-                    std::string ircMessage = "PRIVMSG " + nickname + " :" + message + "\r\n";
-                    send(clientSockets[i].fd, ircMessage.c_str(), ircMessage.size(), 0);
+                    // // Assuming the IRC nickname and message to send
+                    // std::string message = "You are registered in the system!";
+                    // std::string ircMessage = "PRIVMSG " + nickname + " :" + message + "\r\n";
+                    // send(clientSockets[i].fd, ircMessage.c_str(), ircMessage.size(), 0);
                 }
             }
         }

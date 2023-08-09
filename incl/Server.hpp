@@ -4,6 +4,7 @@
 class Server {
    private:
     int _iport;
+    int _fd;
     std::string _port;
     std::string _password;
 
@@ -13,5 +14,6 @@ class Server {
     Server &operator=(const Server &rhs);
     ~Server();
 
-    bool valid_args();
+    int valid_args();
+    int start_server();
 };

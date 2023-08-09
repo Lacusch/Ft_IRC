@@ -8,8 +8,8 @@ SRCPATH 	= ./src
 INCLPATH 	= ./incl
 
 OBJDIR 		= .obj
-FILES			= main Utils Server
-INCLUDES  = Utils Server
+FILES			= main Utils Server Client
+INCLUDES  = Utils Server Client
 
 SRC 			= $(addprefix $(SRCPATH)/, $(addsuffix .cpp, $(FILES)))
 OBJ				= $(addprefix $(OBJDIR)/, $(FILES:=.o))

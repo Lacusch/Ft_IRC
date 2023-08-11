@@ -1,5 +1,9 @@
 #pragma once
+#include <poll.h>
+#include <sys/poll.h>
+
 #include <iostream>
+#include <vector>
 
 class Server {
    private:
@@ -7,6 +11,7 @@ class Server {
     int _fd;
     std::string _port;
     std::string _password;
+    std::vector<pollfd> _sockets;
 
    public:
     Server(std::string port, std::string password);
@@ -16,4 +21,7 @@ class Server {
 
     int valid_args();
     int start_server();
+    int run();
+    int newClient();
+    int clientMessage(int i);
 };

@@ -1,2 +1,10 @@
 #pragma once
-enum Error { INVALID_ARGC };
+enum Error {
+    INVALID_ARGC,
+    EMPTY_ARGS,
+    NUMERIC_PORT,
+    PORT_RANGE,
+    CREATING_SOCKET,
+    BINDING_SOCKET,
+    LISTENING_SOCKET
+};

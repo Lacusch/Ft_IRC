@@ -91,16 +91,17 @@ int Server::newClient() {
         newClientPollFd.events = POLLIN;
         _sockets.push_back(newClientPollFd);
     }
-    return (true);
+    return (0);
 }
 
 int Server::clientMessage(int i) {
     char buffer[1024];
     ssize_t bytesRead = recv(_sockets[i].fd, buffer, sizeof(buffer), 0);
 
-    if (bytesRead == 0)
+    if (bytesRead == 0) {
+        close(_sockets[i].fd);
         std::cout << "Client disconnected." << std::endl;
-    else if (bytesRead < 0)
+    } else if (bytesRead < 0)
         std::cout << "error recv" << std::endl;
     else {
         std::string clientMessage(buffer, bytesRead);

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Client.hpp"
+
 class Server {
    private:
     int _iport;
@@ -12,6 +14,7 @@ class Server {
     std::string _port;
     std::string _password;
     std::vector<pollfd> _sockets;
+    std::vector<Client> _clients;
 
    public:
     Server(std::string port, std::string password);

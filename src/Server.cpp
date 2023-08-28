@@ -38,12 +38,18 @@ int Server::start_server() {
     int server_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket_fd == -1) return (Utils::error(CREATING_SOCKET));
 
+    int reuse = 1;
+    if (setsockopt(server_socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+        close(server_socket_fd);
+        return (Utils::error(CONFIGURING_SOCKET));
+    }
+
     _fd = server_socket_fd;
     sockaddr_in server_adress;
     bzero(&server_adress, sizeof(server_adress));
     server_adress.sin_family = AF_INET;
-    server_adress.sin_addr.s_addr = INADDR_ANY;
     server_adress.sin_port = htons(_iport);
+    server_adress.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket_fd, (struct sockaddr*)&server_adress, sizeof(server_adress)) == -1) {
         close(server_socket_fd);
@@ -106,6 +112,12 @@ int Server::clientMessage(int i) {
     else {
         std::string clientMessage(buffer, bytesRead);
         std::cout << "Client[" << _sockets[i].fd << "] = " << clientMessage << std::endl;
+        if (Utils::parseMsg(clientMessage) == "NICK") {
+            std::cout << "NICKNAME command" << std::endl;
+            std::string nickname =
+                ":server 433 * :Please provide the server password with PASS first ";
+            send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+        }
         send(_sockets[i].fd, clientMessage.c_str(), clientMessage.size(), 0);
     }
     return (true);

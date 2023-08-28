@@ -8,4 +8,5 @@ class Utils {
    public:
     static void print(Color color, std::string str, bool new_line = 1);
     static int error(Error err);
+    static std::string parseMsg(std::string msg);
 };

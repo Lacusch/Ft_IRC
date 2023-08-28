@@ -19,7 +19,13 @@ int Utils::error(Error err) {
     if (err == PORT_RANGE) msg = "Error: please use IRC ports: 6665-6669";
     if (err == CREATING_SOCKET) msg = "Error creating server socket";
     if (err == BINDING_SOCKET) msg = "Error binding server socket";
+    if (err == CONFIGURING_SOCKET) msg = "Error configuring server socket";
     if (err == LISTENING_SOCKET) msg = "Error listening server socket";
     Utils::print(R, msg);
     return (1);
+}
+
+std::string Utils::parseMsg(std::string msg) {
+    std::string substring = msg.substr(0, msg.length() - 2);
+    return (substring);
 }

@@ -96,6 +96,9 @@ int Server::newClient() {
         newClientPollFd.fd = newClientSocket;
         newClientPollFd.events = POLLIN;
         _sockets.push_back(newClientPollFd);
+        Client client(newClientPollFd.fd);
+        std::cout << "registering clientfd: " << newClientPollFd.fd << std::endl;
+        _clients[newClientPollFd.fd] = &client;
     }
     return (0);
 }
@@ -111,14 +114,22 @@ int Server::clientMessage(int i) {
         std::cout << "error recv" << std::endl;
     else {
         std::string clientMessage(buffer, bytesRead);
-        std::cout << "Client[" << _sockets[i].fd << "] = " << clientMessage << std::endl;
-        if (Utils::parseMsg(clientMessage) == "NICK") {
-            std::cout << "NICKNAME command" << std::endl;
-            std::string nickname =
-                ":server 433 * :Please provide the server password with PASS first ";
-            send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+        std::cout << clientMessage << std::endl;
+
+        // PARSING THE COMMAND
+        // BUFFER COMMAND IN PARTS WITH CTRL + D
+
+        if (Utils::parseMsg(clientMessage).find("PASS") != std::string::npos) {
+            std::cout << "Authenticated" << std::endl;
+            _clients[_sockets[i].fd]->_isRegistered = true;
         }
-        send(_sockets[i].fd, clientMessage.c_str(), clientMessage.size(), 0);
+        if (!_clients[_sockets[i].fd]->_isRegistered) {
+            std::string nickname = ":server 464 * :Please provide the server password\r\n";
+            send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+        } else {
+            std::string acknowledge = ":server 001 * :Hello World\r\n";
+            send(_sockets[i].fd, acknowledge.c_str(), acknowledge.size(), 0);
+        }
     }
     return (true);
 }

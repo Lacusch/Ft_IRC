@@ -1,26 +1,17 @@
-
 #include "../incl/Server.hpp"
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <poll.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <cctype>
-#include <iostream>
-#include <string>
-
+#include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
 
-Server::Server(std::string port, std::string password) : _port(port), _password(password){};
+Server::Server(std::string name, std::string port, std::string password)
+    : _name(name), _port(port), _password(password){};
 
 Server::~Server() {
     for (size_t i = 0; i < _sockets.size(); i++) close(_sockets[i].fd);
 };
+
+std::string Server::getName() const { return (this->_name); }
+std::string Server::getPassword() const { return (this->_password); }
 
 int Server::valid_args() {
     int port_int = 0;
@@ -122,13 +113,39 @@ int Server::clientMessage(int i) {
         if (Utils::parseMsg(clientMessage).find("PASS") != std::string::npos) {
             std::cout << "Authenticated" << std::endl;
             _clients[_sockets[i].fd]->_isRegistered = true;
+            // std::string nick = ":server * :NICK segarcia\r\n";
+            // send(_sockets[i].fd, nick.c_str(), nick.size(), 0);
+            std::string acknowledge =
+                ":server 001 segarcia :Welcome to the Internet Relay Network "
+                "segarcia!sergio@127.0.0.1\r\n";
+            send(_sockets[i].fd, acknowledge.c_str(), acknowledge.size(), 0);
+            std::string yourHost =
+                ":server 002 segarcia :Your host is server, running version v1.0\r\n";
+            send(_sockets[i].fd, yourHost.c_str(), yourHost.size(), 0);
+            std::string serverDate = ":server 003 :This server was created today\r\n";
+            send(_sockets[i].fd, serverDate.c_str(), serverDate.size(), 0);
+            // std::string myInfo = ":server 004 :server v1.0 oiws obtkmlvsn";
+            // send(_sockets[i].fd, myInfo.c_str(), myInfo.size(), 0);
+            return (true);
+        }
+        if (_clients[_sockets[i].fd]->_isRegistered &&
+            Utils::parseMsg(clientMessage).find("NICK") != std::string::npos) {
+            std::string nickname = ":server segarcia NICK newnickname\r\n";
+            send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+            return (true);
+        }
+        if (Utils::parseMsg(clientMessage).find("PING") != std::string::npos) {
+            std::cout << "PONG" << std::endl;
+            std::string pong = "PONG :127.0.0.1\r\n";
+            send(_sockets[i].fd, pong.c_str(), pong.size(), 0);
+            return (true);
         }
         if (!_clients[_sockets[i].fd]->_isRegistered) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
             send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
         } else {
-            std::string acknowledge = ":server 001 * :Hello World\r\n";
-            send(_sockets[i].fd, acknowledge.c_str(), acknowledge.size(), 0);
+            std::string helloWorld = ":server segarcia :Hello World\r\n";
+            send(_sockets[i].fd, helloWorld.c_str(), helloWorld.size(), 0);
         }
     }
     return (true);

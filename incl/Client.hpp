@@ -1,3 +1,4 @@
+#include "Shared.hpp"
 
 class Client {
    private:
@@ -6,7 +7,9 @@ class Client {
    public:
     Client(int fd);
     bool _isRegistered;
-    // Client(const Client &rhs);
-    // Client &operator=(const Client &rhs);
+    std::string _nickName;
+
+    Client(const Client &rhs);
+    Client &operator=(const Client &rhs);
     ~Client();
 };

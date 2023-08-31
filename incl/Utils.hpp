@@ -1,8 +1,7 @@
 #pragma once
-#include <iostream>
-
-#include "./Colors.hpp"
-#include "./Errors.hpp"
+#include "Colors.hpp"
+#include "Errors.hpp"
+#include "Shared.hpp"
 
 class Utils {
    public:

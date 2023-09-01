@@ -11,6 +11,7 @@ Server::~Server() {
 };
 
 std::string Server::getName() const { return (this->_name); }
+
 std::string Server::getPassword() const { return (this->_password); }
 
 int Server::valid_args() {
@@ -100,9 +101,9 @@ int Server::clientMessage(int i) {
 
     if (bytesRead == 0) {
         close(_sockets[i].fd);
-        std::cout << "Client disconnected." << std::endl;
+        Utils::print(B, "Client disconnected");
     } else if (bytesRead < 0)
-        std::cout << "error recv" << std::endl;
+        Utils::print(R, "Error: recv");
     else {
         std::string clientMessage(buffer, bytesRead);
         std::cout << clientMessage << std::endl;
@@ -111,8 +112,7 @@ int Server::clientMessage(int i) {
         // BUFFER COMMAND IN PARTS WITH CTRL + D
 
         if (Utils::parseMsg(clientMessage).find("PASS") != std::string::npos) {
-            std::cout << "Authenticated" << std::endl;
-            _clients[_sockets[i].fd]->_isRegistered = true;
+            _clients[_sockets[i].fd]->setAuthentication(true);
             // std::string nick = ":server * :NICK segarcia\r\n";
             // send(_sockets[i].fd, nick.c_str(), nick.size(), 0);
             std::string acknowledge =
@@ -128,7 +128,7 @@ int Server::clientMessage(int i) {
             // send(_sockets[i].fd, myInfo.c_str(), myInfo.size(), 0);
             return (true);
         }
-        if (_clients[_sockets[i].fd]->_isRegistered &&
+        if (_clients[_sockets[i].fd]->isAuthenticated() &&
             Utils::parseMsg(clientMessage).find("NICK") != std::string::npos) {
             std::string nickname = ":server segarcia NICK newnickname\r\n";
             send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
@@ -140,7 +140,7 @@ int Server::clientMessage(int i) {
             send(_sockets[i].fd, pong.c_str(), pong.size(), 0);
             return (true);
         }
-        if (!_clients[_sockets[i].fd]->_isRegistered) {
+        if (!_clients[_sockets[i].fd]->isAuthenticated()) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
             send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
         } else {

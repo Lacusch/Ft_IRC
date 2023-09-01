@@ -1,7 +1,7 @@
 #include "../incl/Server.hpp"
 #include "../incl/Utils.hpp"
 
-#define SERVER_NAME "MR.SERVER.com"
+#define SERVER_NAME "mr.server.com"
 
 int main(int argc, char **argv) {
     if (argc != 3) return (Utils::error(INVALID_ARGC));

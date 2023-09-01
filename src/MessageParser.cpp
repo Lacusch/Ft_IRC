@@ -60,25 +60,6 @@ Request MessageParser::parseMsg(std::string msg) {
 	
 	clientRequest.setTrailing(trailing);
 
-	// std::cout << std::endl;
-	// std::cout << "Prefix: " << clientRequest.getPrefix() << std::endl;
-	// std::cout << "Command: " << clientRequest.getCommand() << std::endl;
-
-
-	// std::vector<std::string> tmpParams = clientRequest.getParams();
-	// std::vector<std::string>::iterator it = tmpParams.begin();
-	// std::vector<std::string>::iterator end = tmpParams.end();
-
-	// while (it != end) {
-	// 	std::cout << "Param: " << *it << std::endl;
-	// 	++it;
-	// }
-
-	// // for (size_t i = 0; i < clientRequest.getParams().size(); ++i) {
-	// // 	std::cout << "Param " << i << ": " << clientRequest.getParams()[i] << std::endl;
-	// // }
-	// std::cout << "Trailing: " << clientRequest.getTrailing() << std::endl;
-
 	return clientRequest;
 }
 

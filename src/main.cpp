@@ -1,3 +1,4 @@
+#include "../incl/Request.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Utils.hpp"
 

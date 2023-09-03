@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Client.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
 #include "Shared.hpp"
 
 class Server {
@@ -27,4 +29,12 @@ class Server {
     int run();
     int newClient();
     int clientMessage(int i);
+    int sendMessage(int fd, Res res);
+
+    // -----------------------
+    //				Messages
+    // -----------------------
+
+    int handlePass(int fd, Request req);
+    std::string messageCreator(int fd, std::string status, std::string trailing);
 };

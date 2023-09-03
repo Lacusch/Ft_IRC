@@ -105,20 +105,19 @@ int Server::clientMessage(int i) {
     } else if (bytesRead < 0)
         Utils::print(R, "Error: recv");
     else {
+        int fd = _sockets[i].fd;
         std::string clientMessage(buffer, bytesRead);
-        std::cout << clientMessage << std::endl;
-
         // PARSING THE COMMAND
-        // BUFFER COMMAND IN PARTS WITH CTRL + D
-
         if (Utils::parseMsg(clientMessage).find("PASS") != std::string::npos) {
-            _clients[_sockets[i].fd]->setAuthentication(true);
+            _clients[fd]->setAuthentication(true);
             // std::string nick = ":server * :NICK segarcia\r\n";
             // send(_sockets[i].fd, nick.c_str(), nick.size(), 0);
-            std::string acknowledge =
-                ":server 001 segarcia :Welcome to the Internet Relay Network "
-                "segarcia!sergio@127.0.0.1\r\n";
-            send(_sockets[i].fd, acknowledge.c_str(), acknowledge.size(), 0);
+            Request req;
+            req.setCommand("PASS");
+            // req.setParams("password");
+            _clients[fd]->setAuthentication(false);
+            this->handlePass(fd, req);
+            return (true);
             std::string yourHost =
                 ":server 002 segarcia :Your host is server, running version v1.0\r\n";
             send(_sockets[i].fd, yourHost.c_str(), yourHost.size(), 0);

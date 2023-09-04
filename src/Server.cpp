@@ -1,5 +1,8 @@
 #include "../incl/Server.hpp"
 
+#include <cctype>
+
+#include "../incl/MessageParser.hpp"
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
 
@@ -107,46 +110,39 @@ int Server::clientMessage(int i) {
     else {
         int fd = _sockets[i].fd;
         std::string clientMessage(buffer, bytesRead);
-        // PARSING THE COMMAND
-        if (Utils::parseMsg(clientMessage).find("PASS") != std::string::npos) {
-            _clients[fd]->setAuthentication(true);
-            // std::string nick = ":server * :NICK segarcia\r\n";
-            // send(_sockets[i].fd, nick.c_str(), nick.size(), 0);
-            Request req;
-            req.setCommand("PASS");
-            // req.setParams("password");
-            // req.setParams("Extra");
-            _clients[fd]->setAuthentication(false);
-            this->handlePass(fd, req);
-            return (true);
-            std::string yourHost =
-                ":server 002 segarcia :Your host is server, running version v1.0\r\n";
-            send(_sockets[i].fd, yourHost.c_str(), yourHost.size(), 0);
-            std::string serverDate = ":server 003 :This server was created today\r\n";
-            send(_sockets[i].fd, serverDate.c_str(), serverDate.size(), 0);
-            // std::string myInfo = ":server 004 :server v1.0 oiws obtkmlvsn";
-            // send(_sockets[i].fd, myInfo.c_str(), myInfo.size(), 0);
-            return (true);
-        }
-        if (_clients[_sockets[i].fd]->isAuthenticated() &&
-            Utils::parseMsg(clientMessage).find("NICK") != std::string::npos) {
-            std::string nickname = ":server segarcia NICK newnickname\r\n";
-            send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
-            return (true);
-        }
-        if (Utils::parseMsg(clientMessage).find("PING") != std::string::npos) {
-            std::cout << "PONG" << std::endl;
-            std::string pong = "PONG :127.0.0.1\r\n";
-            send(_sockets[i].fd, pong.c_str(), pong.size(), 0);
-            return (true);
-        }
+        Request req = MessageParser::parseMsg(Utils::parseMsg(clientMessage));
+
+        Utils::print(G, clientMessage);
+        Utils::print(B, "CMD: " + req.getCommand());
+        Utils::print(B, "PREFIX: " + req.getPrefix());
+        for (unsigned int i = 0; i < req.getParams().size(); i++)
+            Utils::print(B, "PARAM: " + req.getParams()[i]);
+        Utils::print(B, "TRAILING: " + req.getTrailing());
+
+        if (req.getCommand() == "PASS") return (this->handlePass(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
             send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
-        } else {
-            std::string helloWorld = ":server segarcia :Hello World\r\n";
-            send(_sockets[i].fd, helloWorld.c_str(), helloWorld.size(), 0);
         }
+        //     if (_clients[_sockets[i].fd]->isAuthenticated() &&
+        //         Utils::parseMsg(clientMessage).find("NICK") != std::string::npos) {
+        //         std::string nickname = ":server segarcia NICK newnickname\r\n";
+        //         send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+        //         return (true);
+        //     }
+        // if (Utils::parseMsg(clientMessage).find("PING") != std::string::npos) {
+        //     std::cout << "PONG" << std::endl;
+        //     std::string pong = "PONG :127.0.0.1\r\n";
+        //     send(_sockets[i].fd, pong.c_str(), pong.size(), 0);
+        //     return (true);
+        // }
+        // if (!_clients[_sockets[i].fd]->isAuthenticated()) {
+        //     std::string nickname = ":server 464 * :Please provide the server password\r\n";
+        //     send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+        // } else {
+        //     std::string helloWorld = ":server segarcia :Hello World\r\n";
+        //     send(_sockets[i].fd, helloWorld.c_str(), helloWorld.size(), 0);
+        // }
     }
     return (true);
 }

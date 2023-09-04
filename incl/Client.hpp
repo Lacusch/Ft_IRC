@@ -26,5 +26,6 @@ class Client {
     void setAuthentication(bool isAuthenticated);
     void setOperator(bool isOperator);
 
+    void setNickName(std::string nickname);
     std::string getNickName(void) const;
 };

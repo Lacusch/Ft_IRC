@@ -24,3 +24,5 @@ void Client::setAuthentication(bool isAuthenticated) { _isAuthenticated = isAuth
 void Client::setOperator(bool isOperator) { _isOperator = isOperator; }
 
 std::string Client::getNickName(void) const { return (_nickName); }
+
+void Client::setNickName(std::string nickname) { _nickName = nickname; }

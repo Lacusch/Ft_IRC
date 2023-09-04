@@ -111,38 +111,21 @@ int Server::clientMessage(int i) {
         int fd = _sockets[i].fd;
         std::string clientMessage(buffer, bytesRead);
         Request req = MessageParser::parseMsg(Utils::parseMsg(clientMessage));
-
-        Utils::print(G, clientMessage);
-        Utils::print(B, "CMD: " + req.getCommand());
-        Utils::print(B, "PREFIX: " + req.getPrefix());
-        for (unsigned int i = 0; i < req.getParams().size(); i++)
-            Utils::print(B, "PARAM: " + req.getParams()[i]);
-        Utils::print(B, "TRAILING: " + req.getTrailing());
-
-        if (req.getCommand() == "PASS") return (this->handlePass(fd, req));
+        if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
-            send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
+            return (send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0));
         }
-        //     if (_clients[_sockets[i].fd]->isAuthenticated() &&
-        //         Utils::parseMsg(clientMessage).find("NICK") != std::string::npos) {
-        //         std::string nickname = ":server segarcia NICK newnickname\r\n";
-        //         send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
-        //         return (true);
-        //     }
-        // if (Utils::parseMsg(clientMessage).find("PING") != std::string::npos) {
-        //     std::cout << "PONG" << std::endl;
-        //     std::string pong = "PONG :127.0.0.1\r\n";
-        //     send(_sockets[i].fd, pong.c_str(), pong.size(), 0);
-        //     return (true);
-        // }
-        // if (!_clients[_sockets[i].fd]->isAuthenticated()) {
-        //     std::string nickname = ":server 464 * :Please provide the server password\r\n";
-        //     send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0);
-        // } else {
-        //     std::string helloWorld = ":server segarcia :Hello World\r\n";
-        //     send(_sockets[i].fd, helloWorld.c_str(), helloWorld.size(), 0);
-        // }
+        if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
     }
     return (true);
+}
+
+bool Server::nickNameInUse(std::string nickname) {
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        Client* client = it->second;
+        if (client->getNickName() == nickname) return (true);
+    }
+    return (false);
 }

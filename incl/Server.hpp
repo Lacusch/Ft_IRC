@@ -29,12 +29,15 @@ class Server {
     int run();
     int newClient();
     int clientMessage(int i);
-    int sendMessage(int fd, Res res);
+    int sendMessage(int fd, Res res, Request req);
+
+    bool nickNameInUse(std::string nickname);
 
     // -----------------------
     //				Messages
     // -----------------------
 
-    int handlePass(int fd, Request req);
-    std::string messageCreator(int fd, std::string status, std::string trailing);
+    int handlePassword(int fd, Request req);
+    int handleNickName(int fd, Request req);
+    std::string messageCreator(int fd, Status status);
 };

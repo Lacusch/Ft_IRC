@@ -115,6 +115,7 @@ int Server::clientMessage(int i) {
             Request req;
             req.setCommand("PASS");
             // req.setParams("password");
+            // req.setParams("Extra");
             _clients[fd]->setAuthentication(false);
             this->handlePass(fd, req);
             return (true);

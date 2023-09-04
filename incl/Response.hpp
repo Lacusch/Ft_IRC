@@ -1,11 +1,11 @@
 #include "../incl/Shared.hpp"
 
 struct Status {
-    int code;
+    std::string code;
     std::string msg;
 };
 
-enum Res { NOT_ENOUGH_PARAMS };
+enum Res { NOT_ENOUGH_PARAMS, ENOUGH_PARAMS, USER_ALREADY_REGISTERED, INCORRERCT_PASSWORD };
 
 #pragma once
 

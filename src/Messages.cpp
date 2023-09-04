@@ -20,7 +20,7 @@ std::string Server::messageCreator(int fd, std::string status, std::string trail
 int Server::sendMessage(int fd, Res res) {
     Status status;
     status = Response::create_response(res);
-    std::string msg = this->messageCreator(fd, std::to_string(status.code), status.msg);
+    std::string msg = this->messageCreator(fd, status.code, status.msg);
     int res_status = send(fd, msg.c_str(), msg.size(), 0);
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
@@ -28,17 +28,11 @@ int Server::sendMessage(int fd, Res res) {
 
 int Server::handlePass(int fd, Request req) {
     if (req.getParams().size() < 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS));
-    // if (_clients[fd]->isAuthenticated()) {
-    //         std::string res = ":" + this->getName() + " 462 * :User already registered \r\n";
-    //         return (sendMessage(fd, res));
-    // }
-    // if (req.getParams().size() == 1 && req.getParams()[0] != this->getPassword()) {
-    //         std::string res =
-    //             ":" + this->getName() + " 464 * :Incorrect password. Please try again. \r\n";
-    //         return (sendMessage(fd, res));
-    // }
-    if (req.getParams().size() == 1 && req.getParams()[0] == this->getPassword()) {
+    if (req.getParams().size() > 1) return (sendMessage(fd, ENOUGH_PARAMS));
+    if (_clients[fd]->isAuthenticated()) return (sendMessage(fd, USER_ALREADY_REGISTERED));
+    if (req.getParams().size() == 1 && req.getParams()[0] != this->getPassword())
+        return (sendMessage(fd, INCORRERCT_PASSWORD));
+    if (req.getParams().size() == 1 && req.getParams()[0] == this->getPassword())
         _clients[fd]->setAuthentication(true);
-    }
-    return (1);
+    return (0);
 }

@@ -53,10 +53,14 @@ int Server::handleNickName(int fd, Request req) {
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     _clients[fd]->setNickName(nickname);
-    if (_clients[fd]->isRegistered() && _clients[fd]->getNickName().size() > 0) {
+    return (0);
+    if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
+        _clients[fd]->getNickName().size() > 0) {
         sendMessage(fd, RPL_WELCOME, req);
         sendMessage(fd, RPL_YOURHOST, req);
         sendMessage(fd, RPL_CREATED, req);
+        _clients[fd]->setWelcomeMessageDelivered(true);
+        return (0);
     }
     return (0);
 }
@@ -75,11 +79,22 @@ int Server::handleUser(int fd, Request req) {
         _clients[fd]->setRealName(req.getTrailing());
     else
         _clients[fd]->setRealName(req.getParams()[0]);
-
-    if (_clients[fd]->isRegistered() && _clients[fd]->getNickName().size() > 0) {
+    if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
+        _clients[fd]->getNickName().size() > 0) {
         sendMessage(fd, RPL_WELCOME, req);
         sendMessage(fd, RPL_YOURHOST, req);
         sendMessage(fd, RPL_CREATED, req);
+        _clients[fd]->setWelcomeMessageDelivered(true);
     }
+    return (0);
+}
+
+int Server::handlePrivateMsg(int fd, Request req) {
+    (void)req;
+    std::string msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
+                      "@127.0.0.1" + " PRIVMSG " + _clients[fd]->getNickName() + "!" +
+                      _clients[fd]->getUserName() + "@127.0.0.1 :Hi\r\n";
+    std::cout << msg << std::endl;
+    send(fd, msg.c_str(), msg.size(), 0);
     return (0);
 }

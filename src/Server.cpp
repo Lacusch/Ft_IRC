@@ -119,6 +119,7 @@ int Server::clientMessage(int i) {
         }
         if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
         if (req.getCommand() == "USER") return (this->handleUser(fd, req));
+        if (req.getCommand() == "PRIVMSG") return (this->handlePrivateMsg(fd, req));
     }
     return (true);
 }

@@ -40,6 +40,7 @@ class Server {
     int handlePassword(int fd, Request req);
     int handleNickName(int fd, Request req);
     int handleUser(int fd, Request req);
+    int handlePrivateMsg(int fd, Request req);
 
     std::string messageCreator(int fd, Status status);
 };

@@ -56,5 +56,13 @@ Status Response::create_response(Res res, Request req, Client *client) {
         status.code = "003";
         status.msg = "This server was created <date>";
     }
+    if (res == NICKNAME_REGISTERED) {
+        status.code = "";
+        std::string extra_text =
+            (client->getNickName().size() ? client->getNickName() : "*") + "!" +
+            (client->getUserName().size() ? client->getUserName() : "*") + "@127.0.0.1";
+        status.extra = extra_text;
+        status.msg = "NICK" + req.getParams()[0];
+    }
     return (status);
 }

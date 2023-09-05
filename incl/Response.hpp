@@ -19,7 +19,8 @@ enum Res {
     ERRONEOUS_NICKNAME,
     RPL_WELCOME,
     RPL_YOURHOST,
-    RPL_CREATED
+    RPL_CREATED,
+    NICKNAME_REGISTERED
 };
 
 #pragma once

@@ -6,8 +6,8 @@
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
 
-Server::Server(std::string name, std::string port, std::string password)
-    : _name(name), _port(port), _password(password){};
+Server::Server(std::string name, std::string version, std::string port, std::string password)
+    : _name(name), _version(version), _port(port), _password(password){};
 
 Server::~Server() {
     for (size_t i = 0; i < _sockets.size(); i++) close(_sockets[i].fd);
@@ -110,13 +110,15 @@ int Server::clientMessage(int i) {
     else {
         int fd = _sockets[i].fd;
         std::string clientMessage(buffer, bytesRead);
-        Request req = MessageParser::parseMsg(Utils::parseMsg(clientMessage));
+        Request req = MessageParser::parseMsg(fd, Utils::parseMsg(clientMessage));
+
         if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
             return (send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0));
         }
         if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
+        if (req.getCommand() == "USER") return (this->handleUser(fd, req));
     }
     return (true);
 }

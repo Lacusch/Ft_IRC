@@ -1,16 +1,17 @@
 #pragma once
-#include "./Shared.hpp"
-#include "../incl/Request.hpp"
 #include <sstream>
 
+#include "../incl/Request.hpp"
+#include "./Shared.hpp"
 
-/* 
-	* MessageParser is a class that parses the initial messages received from the server
-*/
+/*
+ * MessageParser is a class that parses the initial messages received from the server
+ */
 class MessageParser {
-	private:
-		MessageParser();
-		~MessageParser();
-	public:
-		static Request parseMsg(std::string msg);
+   private:
+    MessageParser();
+    ~MessageParser();
+
+   public:
+    static Request parseMsg(int fd, std::string msg);
 };

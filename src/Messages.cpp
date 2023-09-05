@@ -24,7 +24,7 @@ std::string Server::messageCreator(int fd, Status status) {
 
 int Server::sendMessage(int fd, Res res, Request req) {
     Status status;
-    status = Response::create_response(res, req);
+    status = Response::create_response(res, req, _clients[fd]);
     std::string msg = this->messageCreator(fd, status);
     int res_status = send(fd, msg.c_str(), msg.size(), 0);
     if (res_status == -1) Utils::print(R, "Error sending message");
@@ -34,7 +34,7 @@ int Server::sendMessage(int fd, Res res, Request req) {
 int Server::handlePassword(int fd, Request req) {
     if (req.getParams().size() < 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (req.getParams().size() > 1) return (sendMessage(fd, ENOUGH_PARAMS, req));
-    if (_clients[fd]->isAuthenticated()) return (sendMessage(fd, USER_ALREADY_REGISTERED, req));
+    if (_clients[fd]->isAuthenticated()) return (sendMessage(fd, USER_ALREADY_AUTHENTICATED, req));
     if (req.getParams().size() == 1 && req.getParams()[0] != this->getPassword())
         return (sendMessage(fd, INCORRERCT_PASSWORD, req));
     if (req.getParams().size() == 1 && req.getParams()[0] == this->getPassword())
@@ -53,5 +53,33 @@ int Server::handleNickName(int fd, Request req) {
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     _clients[fd]->setNickName(nickname);
+    if (_clients[fd]->isRegistered() && _clients[fd]->getNickName().size() > 0) {
+        sendMessage(fd, RPL_WELCOME, req);
+        sendMessage(fd, RPL_YOURHOST, req);
+        sendMessage(fd, RPL_CREATED, req);
+    }
+    return (0);
+}
+
+int Server::handleUser(int fd, Request req) {
+    bool hasTrailing = false;
+    int totalParams = req.getParams().size();
+    if (req.getTrailing().size() > 0) hasTrailing = true;
+    if (hasTrailing) totalParams++;
+    if (totalParams < 4) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    if (totalParams > 4) return (sendMessage(fd, ENOUGH_PARAMS, req));
+    if (_clients[fd]->isRegistered()) return (sendMessage(fd, USER_ALREADY_REGISTERED, req));
+    _clients[fd]->setRegistration(true);
+    _clients[fd]->setUsername(req.getParams()[0]);
+    if (hasTrailing)
+        _clients[fd]->setRealName(req.getTrailing());
+    else
+        _clients[fd]->setRealName(req.getParams()[0]);
+
+    if (_clients[fd]->isRegistered() && _clients[fd]->getNickName().size() > 0) {
+        sendMessage(fd, RPL_WELCOME, req);
+        sendMessage(fd, RPL_YOURHOST, req);
+        sendMessage(fd, RPL_CREATED, req);
+    }
     return (0);
 }

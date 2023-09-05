@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Client.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Shared.hpp"
@@ -10,13 +9,14 @@ class Server {
     int _iport;
     int _fd;
     std::string _name;
+    std::string _version;
     std::string _port;
     std::string _password;
     std::vector<pollfd> _sockets;
     std::map<int, Client *> _clients;
 
    public:
-    Server(std::string name, std::string port, std::string password);
+    Server(std::string name, std::string version, std::string port, std::string password);
     Server(const Server &rhs);
     Server &operator=(const Server &rhs);
     ~Server();
@@ -39,5 +39,7 @@ class Server {
 
     int handlePassword(int fd, Request req);
     int handleNickName(int fd, Request req);
+    int handleUser(int fd, Request req);
+
     std::string messageCreator(int fd, Status status);
 };

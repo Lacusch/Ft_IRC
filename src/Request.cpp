@@ -4,6 +4,8 @@ Request::Request() {}
 
 Request::~Request() {}
 
+int Request::getFd() const { return _fd; }
+
 std::string Request::getPrefix() const { return _prefix; }
 
 std::string Request::getTrailing() const { return _trailing; }
@@ -11,6 +13,8 @@ std::string Request::getTrailing() const { return _trailing; }
 std::string Request::getCommand() const { return _command; }
 
 std::vector<std::string> Request::getParams() const { return _params; }
+
+void Request::setFd(int fd) { this->_fd = fd; }
 
 void Request::setPrefix(std::string arg) { this->_prefix = arg; }
 

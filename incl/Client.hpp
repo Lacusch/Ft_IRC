@@ -25,7 +25,10 @@ class Client {
     void setRegistration(bool isRegistered);
     void setAuthentication(bool isAuthenticated);
     void setOperator(bool isOperator);
+    void setUsername(std::string userName);
+    void setRealName(std::string realName);
 
     void setNickName(std::string nickname);
     std::string getNickName(void) const;
+    std::string getUserName(void) const;
 };

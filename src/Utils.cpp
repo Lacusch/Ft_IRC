@@ -1,5 +1,7 @@
 #include "../incl/Utils.hpp"
 
+#include "../incl/Request.hpp"
+
 void Utils::print(Color color, std::string str, bool new_line) {
     if (color == R) std::cout << RED;
     if (color == P) std::cout << PURPLE;
@@ -11,7 +13,7 @@ void Utils::print(Color color, std::string str, bool new_line) {
     std::cout << RESET;
 }
 
-int Utils::error(Error err) {
+int Utils::print_error(Error err) {
     std::string msg = "Error: unknown error";
     if (err == INVALID_ARGC) msg = "usage: ./ircserv <port> <password>";
     if (err == EMPTY_ARGS) msg = "Error: empty arguments";
@@ -25,7 +27,63 @@ int Utils::error(Error err) {
     return (1);
 }
 
-std::string Utils::parseMsg(std::string msg) {
+// Trims last 2 chars from irc client (/r/n)
+std::string Utils::irc_trim(std::string msg) {
     std::string substring = msg.substr(0, msg.length() - 2);
     return (substring);
+}
+
+Request Utils::parse_msg(int fd, std::string msg) {
+    std::vector<std::string> tokens;
+    std::istringstream stream(msg);
+    std::string token;
+
+    std::string prefix = "";
+    std::string command = "";
+    std::string trailing = "";
+
+    bool trailingExist = false;
+    bool trailFound = false;
+
+    while (std::getline(stream, token, ' ')) {
+        if (token.size() == 0) continue;
+        tokens.push_back(token);
+    }
+
+    if (tokens[0][0] == ':') {
+        prefix = tokens[0].substr(1, tokens[0].size() - 1);
+        command = tokens[1];
+    } else {
+        command = tokens[0];
+    }
+
+    Request clientRequest = Request();
+    clientRequest.setFd(fd);
+    clientRequest.setPrefix(prefix);
+    clientRequest.setCommand(command);
+
+    size_t index = 1;
+    if (prefix.length() != 0) {
+        index = 2;
+    }
+    for (size_t i = index; i < tokens.size(); ++i) {
+        if (tokens[i][0] == ':') {
+            trailingExist = true;
+            break;
+        }
+        clientRequest.setParams(tokens[i]);
+    }
+    if (trailingExist) {
+        for (size_t i = 1; i < msg.length(); ++i) {
+            if (msg[i] == ':') {
+                trailFound = true;
+                continue;
+            }
+            if (trailFound) {
+                trailing += msg[i];
+            }
+        }
+    }
+    clientRequest.setTrailing(trailing);
+    return clientRequest;
 }

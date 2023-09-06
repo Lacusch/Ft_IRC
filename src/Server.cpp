@@ -1,13 +1,15 @@
+
 #include "../incl/Server.hpp"
 
-#include <cctype>
-
-#include "../incl/MessageParser.hpp"
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
 
 Server::Server(std::string name, std::string version, std::string port, std::string password)
-    : _name(name), _version(version), _port(port), _password(password){};
+    : _name(name),
+      _version(version),
+      _creation_date(std::time(nullptr)),
+      _port(port),
+      _password(password){};
 
 Server::~Server() {
     for (size_t i = 0; i < _sockets.size(); i++) close(_sockets[i].fd);
@@ -15,28 +17,37 @@ Server::~Server() {
 
 std::string Server::getName() const { return (this->_name); }
 
+std::string Server::getVersion() const { return (this->_version); }
+
 std::string Server::getPassword() const { return (this->_password); }
 
+std::string Server::getCreationDate() const {
+    std::string datetime = std::ctime(&_creation_date);
+    return (datetime);
+}
+
+// Returns 1 on error
 int Server::valid_args() {
     int port_int = 0;
-    if (_port.empty() || _password.empty()) return (Utils::error(EMPTY_ARGS));
+    if (_port.empty() || _password.empty()) return (Utils::print_error(EMPTY_ARGS));
     for (const char* ptr = _port.c_str(); *ptr != '\0'; ++ptr) {
-        if (!std::isdigit(*ptr)) return (Utils::error(NUMERIC_PORT));
+        if (!std::isdigit(*ptr)) return (Utils::print_error(NUMERIC_PORT));
         port_int = port_int * 10 + (*ptr - '0');
     }
-    if (port_int > 6669 || port_int < 6665) return (Utils::error(PORT_RANGE));
+    if (port_int > 6669 || port_int < 6665) return (Utils::print_error(PORT_RANGE));
     _iport = port_int;
     return (0);
 };
 
+// Returns 1 on error
 int Server::start_server() {
     int server_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket_fd == -1) return (Utils::error(CREATING_SOCKET));
+    if (server_socket_fd == -1) return (Utils::print_error(CREATING_SOCKET));
 
     int reuse = 1;
     if (setsockopt(server_socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
         close(server_socket_fd);
-        return (Utils::error(CONFIGURING_SOCKET));
+        return (Utils::print_error(CONFIGURING_SOCKET));
     }
 
     _fd = server_socket_fd;
@@ -48,12 +59,12 @@ int Server::start_server() {
 
     if (bind(server_socket_fd, (struct sockaddr*)&server_adress, sizeof(server_adress)) == -1) {
         close(server_socket_fd);
-        return (Utils::error(BINDING_SOCKET));
+        return (Utils::print_error(BINDING_SOCKET));
     }
 
     if (listen(server_socket_fd, server_socket_fd + 1) == -1) {
         close(server_socket_fd);
-        return (Utils::error(LISTENING_SOCKET));
+        return (Utils::print_error(LISTENING_SOCKET));
     };
 
     pollfd serverPollFd;
@@ -91,9 +102,9 @@ int Server::newClient() {
         newClientPollFd.fd = newClientSocket;
         newClientPollFd.events = POLLIN;
         _sockets.push_back(newClientPollFd);
-        Client client(newClientPollFd.fd);
+        Client* client = new Client(newClientPollFd.fd);
         std::cout << "registering clientfd: " << newClientPollFd.fd << std::endl;
-        _clients[newClientPollFd.fd] = &client;
+        _clients[newClientPollFd.fd] = client;
     }
     return (0);
 }
@@ -110,7 +121,8 @@ int Server::clientMessage(int i) {
     else {
         int fd = _sockets[i].fd;
         std::string clientMessage(buffer, bytesRead);
-        Request req = MessageParser::parseMsg(fd, Utils::parseMsg(clientMessage));
+        Utils::print(G, clientMessage);
+        Request req = Utils::parse_msg(fd, Utils::irc_trim(clientMessage));
 
         if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {
@@ -118,6 +130,7 @@ int Server::clientMessage(int i) {
             return (send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0));
         }
         if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
+
         if (req.getCommand() == "USER") return (this->handleUser(fd, req));
         if (req.getCommand() == "PRIVMSG") return (this->handlePrivateMsg(fd, req));
     }

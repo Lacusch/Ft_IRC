@@ -10,7 +10,10 @@
 #include <unistd.h>
 
 #include <cctype>
+#include <cstddef>
+#include <ctime>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>

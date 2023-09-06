@@ -3,30 +3,14 @@
 #include <cctype>
 #include <string>
 
-#include "../incl/Response.hpp"
+#include "../incl/Responses.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
 
-std::string Server::messageCreator(int fd, Status status) {
-    std::string res = "";
-    res += ":" + this->getName() + " " + status.code + " ";
-    std::string nickName = _clients[fd]->getNickName();
-    if (nickName.length() > 0)
-        res += _clients[fd]->getNickName() + " ";
-    else
-        res += "* ";
-    if (status.extra.length()) res += status.extra + " ";
-    res += ":" + status.msg + "\r\n";
-    Utils::print(P, res);
-    return (res);
-}
-
 int Server::sendMessage(int fd, Res res, Request req) {
-    Status status;
-    status = Response::create_response(res, req, _clients[fd]);
-    std::string msg = this->messageCreator(fd, status);
-    int res_status = send(fd, msg.c_str(), msg.size(), 0);
+    std::string response_msg = this->create_response(fd, res, req);
+    int res_status = send(fd, response_msg.c_str(), response_msg.size(), 0);
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
 }
@@ -52,8 +36,9 @@ int Server::handleNickName(int fd, Request req) {
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
+    // TODO Fix
+    sendMessage(fd, NICKNAME_REGISTERED, req);
     _clients[fd]->setNickName(nickname);
-    return (0);
     if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
         _clients[fd]->getNickName().size() > 0) {
         sendMessage(fd, RPL_WELCOME, req);
@@ -62,6 +47,7 @@ int Server::handleNickName(int fd, Request req) {
         _clients[fd]->setWelcomeMessageDelivered(true);
         return (0);
     }
+    // sendMessage(fd, NICKNAME_REGISTERED, req);
     return (0);
 }
 

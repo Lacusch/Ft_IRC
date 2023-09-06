@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Client.hpp"
 #include "Request.hpp"
-#include "Response.hpp"
+#include "Responses.hpp"
 #include "Shared.hpp"
 
 class Server {
@@ -10,6 +11,7 @@ class Server {
     int _fd;
     std::string _name;
     std::string _version;
+    std::time_t _creation_date;
     std::string _port;
     std::string _password;
     std::vector<pollfd> _sockets;
@@ -21,7 +23,12 @@ class Server {
     Server &operator=(const Server &rhs);
     ~Server();
 
+    // -----------------------
+    // Getters
+    // -----------------------
     std::string getName() const;
+    std::string getVersion() const;
+    std::string getCreationDate() const;
     std::string getPassword() const;
 
     int valid_args();
@@ -30,17 +37,15 @@ class Server {
     int newClient();
     int clientMessage(int i);
     int sendMessage(int fd, Res res, Request req);
-
     bool nickNameInUse(std::string nickname);
 
     // -----------------------
     //				Messages
     // -----------------------
-
     int handlePassword(int fd, Request req);
     int handleNickName(int fd, Request req);
     int handleUser(int fd, Request req);
     int handlePrivateMsg(int fd, Request req);
-
-    std::string messageCreator(int fd, Status status);
+    std::string create_response(int fd, Res res, Request req);
+    // std::string messageCreator(int fd, Status status);
 };

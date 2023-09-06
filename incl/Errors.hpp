@@ -1,4 +1,5 @@
 #pragma once
+
 enum Error {
     INVALID_ARGC,
     EMPTY_ARGS,

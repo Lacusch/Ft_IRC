@@ -1,5 +1,4 @@
-#include <string>
-
+#pragma once
 #include "Shared.hpp"
 
 class Client {

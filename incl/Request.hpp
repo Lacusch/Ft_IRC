@@ -1,9 +1,9 @@
 #pragma once
 #include "Shared.hpp"
 
-/*
- * Request class creates a request to the server
- */
+// -----------------------
+// Request class creates a request to the server
+// -----------------------
 class Request {
    private:
     int _fd;
@@ -16,14 +16,18 @@ class Request {
     Request();
     ~Request();
 
-    // setters
+    // -----------------------
+    // Setters
+    // -----------------------
     void setFd(int fd);
     void setPrefix(std::string arg);
     void setCommand(std::string arg);
     void setTrailing(std::string arg);
     void setParams(std::string arg);
 
+    // -----------------------
     // Getters
+    // -----------------------
     int getFd() const;
     std::string getPrefix() const;
     std::string getCommand() const;

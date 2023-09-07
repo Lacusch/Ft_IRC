@@ -34,6 +34,8 @@ std::string Client::getNickName(void) const { return (_nickName); }
 
 std::string Client::getUserName(void) const { return (_userName); }
 
+int Client::getFd(void) const { return (_fd); }
+
 bool Client::getWelcomeMessageDelivered(void) const { return (_welcomeMessageDelivered); }
 
 void Client::setNickName(std::string nickname) { _nickName = nickname; }

@@ -1,8 +1,3 @@
-#include <sys/socket.h>
-
-#include <cctype>
-#include <string>
-
 #include "../incl/Responses.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Shared.hpp"
@@ -36,7 +31,6 @@ int Server::handleNickName(int fd, Request req) {
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
-    // TODO Fix
     sendMessage(fd, NICKNAME_REGISTERED, req);
     _clients[fd]->setNickName(nickname);
     if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
@@ -47,7 +41,6 @@ int Server::handleNickName(int fd, Request req) {
         _clients[fd]->setWelcomeMessageDelivered(true);
         return (0);
     }
-    // sendMessage(fd, NICKNAME_REGISTERED, req);
     return (0);
 }
 
@@ -76,11 +69,9 @@ int Server::handleUser(int fd, Request req) {
 }
 
 int Server::handlePrivateMsg(int fd, Request req) {
-    (void)req;
-    std::string msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
-                      "@127.0.0.1" + " PRIVMSG " + _clients[fd]->getNickName() + "!" +
-                      _clients[fd]->getUserName() + "@127.0.0.1 :Hi\r\n";
-    std::cout << msg << std::endl;
-    send(fd, msg.c_str(), msg.size(), 0);
+    (void)fd;
+    int sender_fd = this->getFdFromNickName(req.getParams()[0]);
+    if (sender_fd == -1) return (0);
+    sendMessage(sender_fd, SEND_PRIVATE_MESSAGE, req);
     return (0);
 }

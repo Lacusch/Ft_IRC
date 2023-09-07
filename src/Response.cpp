@@ -63,7 +63,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
     }
     if (res == NICKNAME_IN_USE) {
         msg += ":" + this->getName() + " 433 " + client_recipient(client) +
-               (req.getParams()[0].length() ? " " + req.getParams()[0] : "") +
+               (req.getParams().size() ? " " + req.getParams()[0] : "") +
                " :Nickname is already in use\r\n";
     }
     if (res == RPL_WELCOME) {
@@ -80,9 +80,14 @@ std::string Server::create_response(int fd, Res res, Request req) {
                " :This server was created " + this->getCreationDate() + "\r\n";
     }
     if (res == NICKNAME_REGISTERED) {
-        msg += ":" + (client->getNickName().size() ? client->getNickName() : "*") + "!" + "*" +
-               "@127.0.0.1" + " NICK " + req.getParams()[0] + "\r\n";
+        msg += ":" + (client->getNickName().size() ? client->getNickName() : "*") + "!" +
+               (client->getUserName().size() ? client->getUserName() : "*") + "@127.0.0.1" +
+               " NICK " + req.getParams()[0] + "\r\n";
         ;
+    }
+    if (res == SEND_PRIVATE_MESSAGE) {
+        msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() + "@0.0.0.0" +
+               " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
     }
     Utils::print(Y, msg);
     return (msg);

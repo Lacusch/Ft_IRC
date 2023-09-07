@@ -145,3 +145,12 @@ bool Server::nickNameInUse(std::string nickname) {
     }
     return (false);
 }
+
+int Server::getFdFromNickName(std::string nickname) {
+    std::map<int, Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        Client* client = it->second;
+        if (client->getNickName() == nickname) return (client->getFd());
+    }
+    return (-1);
+}

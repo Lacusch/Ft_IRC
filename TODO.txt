@@ -1,0 +1,6 @@
+Sergio @07/09/23
+- PRIVMSG
+- Fix errors from Request
+- Case sensitive
+- Middleware definition
+- Merge Channel class

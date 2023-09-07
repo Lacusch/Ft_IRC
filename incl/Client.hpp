@@ -33,5 +33,6 @@ class Client {
 
     std::string getNickName(void) const;
     std::string getUserName(void) const;
+    int getFd(void) const;
     bool getWelcomeMessageDelivered(void) const;
 };

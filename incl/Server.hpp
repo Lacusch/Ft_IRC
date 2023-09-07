@@ -30,6 +30,7 @@ class Server {
     std::string getVersion() const;
     std::string getCreationDate() const;
     std::string getPassword() const;
+    int getFdFromNickName(std::string nickname);
 
     int valid_args();
     int start_server();
@@ -47,5 +48,6 @@ class Server {
     int handleUser(int fd, Request req);
     int handlePrivateMsg(int fd, Request req);
     std::string create_response(int fd, Res res, Request req);
+
     // std::string messageCreator(int fd, Status status);
 };

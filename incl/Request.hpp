@@ -7,6 +7,7 @@
 class Request {
    private:
     int _fd;
+    int _receiver_fd;
     std::string _prefix;
     std::string _command;
     std::vector<std::string> _params;
@@ -20,6 +21,7 @@ class Request {
     // Setters
     // -----------------------
     void setFd(int fd);
+    void setReceiverFd(int fd);
     void setPrefix(std::string arg);
     void setCommand(std::string arg);
     void setTrailing(std::string arg);
@@ -29,6 +31,7 @@ class Request {
     // Getters
     // -----------------------
     int getFd() const;
+    int getReceiverFd() const;
     std::string getPrefix() const;
     std::string getCommand() const;
     std::string getTrailing() const;

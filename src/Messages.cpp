@@ -4,8 +4,10 @@
 #include "../incl/Utils.hpp"
 
 int Server::sendMessage(int fd, Res res, Request req) {
+    int sendFd = fd;
+    if (req.getCommand() == "PRIVMSG") sendFd = req.getReceiverFd();
     std::string response_msg = this->create_response(fd, res, req);
-    int res_status = send(fd, response_msg.c_str(), response_msg.size(), 0);
+    int res_status = send(sendFd, response_msg.c_str(), response_msg.size(), 0);
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
 }
@@ -69,9 +71,11 @@ int Server::handleUser(int fd, Request req) {
 }
 
 int Server::handlePrivateMsg(int fd, Request req) {
-    (void)fd;
-    int sender_fd = this->getFdFromNickName(req.getParams()[0]);
-    if (sender_fd == -1) return (0);
-    sendMessage(sender_fd, SEND_PRIVATE_MESSAGE, req);
+    // fd 4 sender A
+    int recipient_fd = this->getFdFromNickName(req.getParams()[0]);
+    // fd 5 receiver B
+    if (recipient_fd == -1) return (0);
+    req.setReceiverFd(recipient_fd);
+    sendMessage(fd, SEND_PRIVATE_MESSAGE, req);
     return (0);
 }

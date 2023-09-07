@@ -59,6 +59,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
 
     Request clientRequest = Request();
     clientRequest.setFd(fd);
+    clientRequest.setReceiverFd(fd);
     clientRequest.setPrefix(prefix);
     clientRequest.setCommand(command);
 

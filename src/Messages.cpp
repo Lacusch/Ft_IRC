@@ -5,8 +5,8 @@
 
 int Server::sendMessage(int fd, Res res, Request req) {
     int sendFd = fd;
-    if (req.getCommand() == "PRIVMSG") sendFd = req.getReceiverFd();
     std::string response_msg = this->create_response(fd, res, req);
+    if (req.getCommand() == "PRIVMSG") sendFd = req.getReceiverFd();
     int res_status = send(sendFd, response_msg.c_str(), response_msg.size(), 0);
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
@@ -71,10 +71,10 @@ int Server::handleUser(int fd, Request req) {
 }
 
 int Server::handlePrivateMsg(int fd, Request req) {
-    // fd 4 sender A
+    if (req.getParams().size() == 0) return (sendMessage(fd, ERR_NORECIPIENT, req));
+    if (req.getTrailing().size() == 0) return (sendMessage(fd, NO_TEXT_TO_SEND, req));
     int recipient_fd = this->getFdFromNickName(req.getParams()[0]);
-    // fd 5 receiver B
-    if (recipient_fd == -1) return (0);
+    if (recipient_fd == -1) return (sendMessage(fd, ERR_NOSUCHNICK, req));
     req.setReceiverFd(recipient_fd);
     sendMessage(fd, SEND_PRIVATE_MESSAGE, req);
     return (0);

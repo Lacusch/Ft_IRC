@@ -10,4 +10,5 @@ class Utils {
     static int print_error(Error err);
     static std::string irc_trim(std::string msg);
     static Request parse_msg(int fd, std::string msg);
+    static std::string to_upper(std::string str);
 };

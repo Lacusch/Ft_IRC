@@ -121,18 +121,25 @@ int Server::clientMessage(int i) {
     else {
         int fd = _sockets[i].fd;
         std::string clientMessage(buffer, bytesRead);
-        Utils::print(G, clientMessage);
         Request req = Utils::parse_msg(fd, Utils::irc_trim(clientMessage));
+        req.setCommand(Utils::to_upper(req.getCommand()));
 
+        if (req.getCommand().length() == 0) return (sendMessage(fd, UNKNWON_COMMAND, req));
         if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
             return (send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0));
         }
-        if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
-
-        if (req.getCommand() == "USER") return (this->handleUser(fd, req));
-        if (req.getCommand() == "PRIVMSG") return (this->handlePrivateMsg(fd, req));
+        if (req.getCommand() == "NICK")
+            return (this->handleNickName(fd, req));
+        else if (req.getCommand() == "USER")
+            return (this->handleUser(fd, req));
+        else if (req.getCommand() == "PRIVMSG")
+            return (this->handlePrivateMsg(fd, req));
+        else if (req.getCommand() == "PING" || req.getCommand() == "NOTICE")
+            return (true);
+        else
+            return (sendMessage(fd, UNKNWON_COMMAND, req));
     }
     return (true);
 }

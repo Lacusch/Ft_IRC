@@ -29,6 +29,7 @@ int Utils::print_error(Error err) {
 
 // Trims last 2 chars from irc client (/r/n)
 std::string Utils::irc_trim(std::string msg) {
+    if (msg.length() == 0) return ("");
     std::string substring = msg.substr(0, msg.length() - 2);
     return (substring);
 }
@@ -38,6 +39,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
     std::istringstream stream(msg);
     std::string token;
 
+    Request clientRequest = Request();
     std::string prefix = "";
     std::string command = "";
     std::string trailing = "";
@@ -45,11 +47,18 @@ Request Utils::parse_msg(int fd, std::string msg) {
     bool trailingExist = false;
     bool trailFound = false;
 
+    clientRequest.setFd(fd);
+    clientRequest.setReceiverFd(fd);
+    clientRequest.setPrefix(prefix);
+    clientRequest.setCommand(command);
+    clientRequest.setTrailing(trailing);
+
     while (std::getline(stream, token, ' ')) {
         if (token.size() == 0) continue;
         tokens.push_back(token);
     }
 
+    if (tokens.size() == 0) return clientRequest;
     if (tokens[0][0] == ':') {
         prefix = tokens[0].substr(1, tokens[0].size() - 1);
         command = tokens[1];
@@ -57,9 +66,6 @@ Request Utils::parse_msg(int fd, std::string msg) {
         command = tokens[0];
     }
 
-    Request clientRequest = Request();
-    clientRequest.setFd(fd);
-    clientRequest.setReceiverFd(fd);
     clientRequest.setPrefix(prefix);
     clientRequest.setCommand(command);
 
@@ -87,4 +93,11 @@ Request Utils::parse_msg(int fd, std::string msg) {
     }
     clientRequest.setTrailing(trailing);
     return clientRequest;
+}
+
+std::string Utils::to_upper(std::string str) {
+    for (std::string::iterator it = str.begin(); it != str.end(); ++it) {
+        *it = std::toupper(*it);
+    }
+    return (str);
 }

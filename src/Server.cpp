@@ -7,7 +7,7 @@
 Server::Server(std::string name, std::string version, std::string port, std::string password)
     : _name(name),
       _version(version),
-      _creation_date(std::time(nullptr)),
+      _creation_date(std::time(NULL)),
       _port(port),
       _password(password){};
 

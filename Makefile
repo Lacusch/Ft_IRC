@@ -8,7 +8,7 @@ SRCPATH 	= ./src
 INCLPATH 	= ./incl
 
 OBJDIR 		= .obj
-FILES			= main Utils Server Client Request Messages Response
+FILES			= main Utils Server Client Request Messages Response Channel
 INCLUDES  = Utils Server Client Request
 
 SRC 			= $(addprefix $(SRCPATH)/, $(addsuffix .cpp, $(FILES)))

@@ -24,11 +24,9 @@ Channel::~Channel() {
 // ------------------------------------------------------------
 bool Channel::join(Client* client, int fd) {
 
-	// Check if the user is already a member
 	if (isMember(client, fd))  return false; // Client is already in the channel
 
-	// Add the client to the list of members
-	_members[fd] = client;
+	_members[fd] = client; // Add the client to the list of members
 	std::cout << "Client " << fd << " " << _members[fd]->getNickName() << " joined the channel." << std::endl; 
 
 	return true;
@@ -36,18 +34,14 @@ bool Channel::join(Client* client, int fd) {
 
 bool Channel::kick(Client* client, int fd) {
 	if (!isMember(client, fd))  return false; // Client is not in the channel
-	if (!client->isOperator()) return false;
 
 	_members.erase(fd); // Eject the client
 	return true;
 }
 
 bool Channel::invite(Client* client, int fd) {
-	// invite a client to the channel
 
 	if (isMember(client, fd))  return false; // Client is already in the channel
-	if (!client->isOperator()) return false;
-
 	return true; // Client is not in the channel
 }
 
@@ -110,22 +104,14 @@ void Channel::setUserLimitMode(State mode) {
 const std::string & Channel::getName() const {
 	return _name;
 }
-const std::string & Channel::getTopic() const {
-	// std::cout << _topic << std::endl;
-	return _topic;
-}
 
-const std::string & Channel::getPassword() const {
-	return _password;
-}
+const std::string & Channel::getTopic() const { return _topic; }
 
-unsigned int Channel::getLimit() const {
-	return _limit;
-}
+const std::string & Channel::getPassword() const { return _password; }
 
-bool Channel::isInviteOnly() const {
-	return _inviteOnly;
-}
+unsigned int Channel::getLimit() const { return _limit; }
+
+bool Channel::isInviteOnly() const { return _inviteOnly; }
 
 void Channel::getMembers() {
 	std::map<int, Client*>::iterator it;

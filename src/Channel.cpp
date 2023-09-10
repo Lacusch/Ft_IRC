@@ -25,16 +25,19 @@ Channel::~Channel() {
 bool Channel::join(Client* client, int fd) {
 
 	if (isMember(client, fd))  return false; // Client is already in the channel
+	if (_members.size() >= _limit) return false; // Channel is full
+
+	if (_members.size() == 0)
+		client->setOperator(true);
 
 	_members[fd] = client; // Add the client to the list of members
-	std::cout << "Client " << fd << " " << _members[fd]->getNickName() << " joined the channel." << std::endl; 
+	std::cout << "Client " << fd << " " << _members[fd]->getNickName() << " joined the channel." << std::endl;
 
 	return true;
 }
 
 bool Channel::kick(Client* client, int fd) {
 	if (!isMember(client, fd))  return false; // Client is not in the channel
-
 	_members.erase(fd); // Eject the client
 	return true;
 }

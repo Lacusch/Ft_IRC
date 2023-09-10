@@ -25,6 +25,10 @@ int main(int argc, char **argv) {
     if (general.join(&client2, 2)) {
         std::cout << "Client in " + general.getName() + " !" << std::endl;
     }
+
+    general.setUserLimitMode(on);
+    general.setUserLimit(2);
+
     if (general.join(&client3, 3)) {
         std::cout << "Client in " + general.getName() + " !" << std::endl;
     }
@@ -39,7 +43,6 @@ int main(int argc, char **argv) {
 
     general.setInviteOnlyMode(on);
 
-    general.setUserLimitMode(on);
     general.setUserLimit(120);
 
     Utils::print(Y, "Topic: |" + general.getTopic() + "|");

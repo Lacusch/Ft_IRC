@@ -82,7 +82,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
     }
     if (trailingExist) {
         for (size_t i = 1; i < msg.length(); ++i) {
-            if (msg[i] == ':') {
+            if (msg[i] == ':' && !trailFound) {
                 trailFound = true;
                 continue;
             }

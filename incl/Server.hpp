@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Channel.hpp"
 #include "Client.hpp"
 #include "Request.hpp"
 #include "Responses.hpp"
@@ -16,6 +17,7 @@ class Server {
     std::string _password;
     std::vector<pollfd> _sockets;
     std::map<int, Client *> _clients;
+    std::map<std::string, Channel *> _channels;
 
    public:
     Server(std::string name, std::string version, std::string port, std::string password);
@@ -39,6 +41,7 @@ class Server {
     int clientMessage(int i);
     int sendMessage(int fd, Res res, Request req);
     bool nickNameInUse(std::string nickname);
+    bool channelExists(std::string channel_name);
 
     // -----------------------
     //				Messages
@@ -47,6 +50,9 @@ class Server {
     int handleNickName(int fd, Request req);
     int handleUser(int fd, Request req);
     int handlePrivateMsg(int fd, Request req);
+    int handleJoinChannel(int fd, Request req);
+    int handleChannelMessage(int fd, Request req);
+
     std::string create_response(int fd, Res res, Request req);
 
     // std::string messageCreator(int fd, Status status);

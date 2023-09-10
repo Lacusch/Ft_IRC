@@ -13,6 +13,7 @@ std::string client_recipient(Client *client) {
 std::string Server::create_response(int fd, Res res, Request req) {
     std::string msg = "";
     Client *client = _clients[fd];
+
     if (res == NOT_ENOUGH_PARAMS) {
         msg += ":" + this->getName() + " 461 " + client_recipient(client) +
                " :Not enough parameters\r\n";
@@ -68,6 +69,12 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == ERR_NOSUCHNICK) {
         msg += ":" + this->getName() + " 401 " + client_recipient(client) + " " +
                req.getParams()[0] + " :No such nick/channel" + "\r\n";
+    } else if (res == JOIN_CHANNEL) {
+        msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
+               "@127.0.0.1 " + "JOIN " + req.getParams()[0] + "\r\n";
+    } else if (res == BAD_CHANNEL_STRUCTURE) {
+        msg += ":" + this->getName() + " 401 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :Channel should begin with #\r\n";
     } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";

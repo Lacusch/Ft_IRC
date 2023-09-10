@@ -1,6 +1,7 @@
 
 #include "../incl/Server.hpp"
 
+#include "../incl/Channel.hpp"
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
 
@@ -123,7 +124,7 @@ int Server::clientMessage(int i) {
         std::string clientMessage(buffer, bytesRead);
         Request req = Utils::parse_msg(fd, Utils::irc_trim(clientMessage));
         req.setCommand(Utils::to_upper(req.getCommand()));
-
+        Utils::print(G, clientMessage);
         if (req.getCommand().length() == 0) return (sendMessage(fd, UNKNWON_COMMAND, req));
         if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {
@@ -136,8 +137,12 @@ int Server::clientMessage(int i) {
             return (this->handleUser(fd, req));
         else if (req.getCommand() == "PRIVMSG")
             return (this->handlePrivateMsg(fd, req));
-        else if (req.getCommand() == "PING" || req.getCommand() == "NOTICE")
+        else if (req.getCommand() == "PING")
             return (true);
+        else if (req.getCommand() == "NOTICE")
+            return (true);
+        else if (req.getCommand() == "JOIN")
+            return (this->handleJoinChannel(fd, req));
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }
@@ -149,6 +154,15 @@ bool Server::nickNameInUse(std::string nickname) {
     for (it = _clients.begin(); it != _clients.end(); ++it) {
         Client* client = it->second;
         if (client->getNickName() == nickname) return (true);
+    }
+    return (false);
+}
+
+bool Server::channelExists(std::string channel_name) {
+    std::map<std::string, Channel*>::iterator it;
+    for (it = _channels.begin(); it != _channels.end(); ++it) {
+        Channel* channel = it->second;
+        if (channel->getName() == channel_name) return (true);
     }
     return (false);
 }

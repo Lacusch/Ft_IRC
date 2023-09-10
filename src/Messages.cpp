@@ -74,8 +74,47 @@ int Server::handlePrivateMsg(int fd, Request req) {
     if (req.getParams().size() == 0) return (sendMessage(fd, ERR_NORECIPIENT, req));
     if (req.getTrailing().size() == 0) return (sendMessage(fd, NO_TEXT_TO_SEND, req));
     int recipient_fd = this->getFdFromNickName(req.getParams()[0]);
+    if (recipient_fd == -1 && req.getParams()[0][0] == '#') {
+        handleChannelMessage(fd, req);
+        return (0);
+    }
     if (recipient_fd == -1) return (sendMessage(fd, ERR_NOSUCHNICK, req));
     req.setReceiverFd(recipient_fd);
     sendMessage(fd, SEND_PRIVATE_MESSAGE, req);
+    return (0);
+}
+
+int Server::handleChannelMessage(int fd, Request req) {
+    std::string channel_name = req.getParams()[0];
+    channel_name = channel_name.substr(1);
+    Channel* channel = _channels[channel_name];
+    std::map<int, Client*> members = channel->getMembersList();
+    std::map<int, Client*>::iterator it;
+    for (it = members.begin(); it != members.end(); ++it) {
+        Client* idx_member = it->second;
+        if (idx_member->getFd() == fd) continue;
+        req.setReceiverFd(idx_member->getFd());
+        sendMessage(fd, SEND_PRIVATE_MESSAGE, req);
+    }
+    return (0);
+}
+
+int Server::handleJoinChannel(int fd, Request req) {
+    if (req.getParams().size() == 0) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    if (req.getParams().size() > 2) return (sendMessage(fd, ENOUGH_PARAMS, req));
+    std::string channel_name = req.getParams()[0];
+    std::string channel_password = "";
+    if (req.getParams().size() == 2) channel_password = req.getParams()[1];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+    channel_name = channel_name.substr(1);
+    std::string password = "";
+    if (!channelExists(channel_name)) {
+        Channel* general = new Channel(channel_name, password);
+        _channels[channel_name] = general;
+    }
+    Channel* channel = _channels[channel_name];
+    channel->join(_clients[fd], fd);
+    channel->getMembers();
+    sendMessage(fd, JOIN_CHANNEL, req);
     return (0);
 }

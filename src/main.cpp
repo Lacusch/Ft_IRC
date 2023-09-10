@@ -11,7 +11,7 @@
 
 int main(int argc, char **argv) {
 
-    std::string channelName = "|--Test Jurassic Channel--|";
+/*     std::string channelName = "|--Test Jurassic Channel--|";
     std::string password = "";
     Channel general(channelName, password);
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     Utils::print(G, "Invite Only: ", 0);
     std::cout << general.isInviteOnly() << std::endl;
 
-    return 0;
+    return 0; */
     if (argc != 3) return (Utils::print_error(INVALID_ARGC));
     Server server(SERVER_NAME, SERVER_VERSION, argv[1], argv[2]);
     if (server.valid_args() || server.start_server()) return (1);

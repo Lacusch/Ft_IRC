@@ -18,6 +18,8 @@ class Client {
     Client &operator=(const Client &rhs);
     ~Client();
 
+    std::string msgBuffer;
+
     bool isAuthenticated(void) const;
     bool isRegistered(void) const;
     bool isOperator(void) const;

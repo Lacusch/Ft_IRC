@@ -210,15 +210,15 @@ Res Server::handleKeyMode(Request req, Channel *ch) {
 }
 
 int Server::handleChannelMode(int fd, Request req, Channel *ch) {
-    (void) fd;
 
-    if (req.getParams().size() < 2) { return (NOT_ENOUGH_PARAMS); }
+
+    if (req.getParams().size() < 2) { return sendMessage(fd, NOT_ENOUGH_PARAMS, req); }
     std::string mode = req.getParams()[1];
     if (mode.length() != 2) {
-        return (ERR_UNKNOWNMODE);
+        return (sendMessage(fd, ERR_UNKNOWNMODE, req));
     }
-    if (mode[0] != + '+' && mode[0] != '-') {
-        return (ERR_UNKNOWNMODE);
+    if (mode[0] != '+' && mode[0] != '-') {
+        return (sendMessage(fd, ERR_UNKNOWNMODE, req));
     }
 
     mode = Utils::to_upper(mode);
@@ -228,7 +228,7 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
     std::map<int, Client *>::iterator it = _clients.begin();
     switch (mode[1]) {
         case 'O':
-
+            if (req.getParams()[2].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             for (; it != _clients.end(); ++it) {
                 if (it->second->getNickName() == req.getParams()[2]) {
                     target = it->second;
@@ -255,4 +255,26 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
             break;
     }
     return (sendMessage(fd, response, req));
+}
+
+
+int Server::handleMode(int fd, Request req) {
+
+    if (req.getParams().size() < 2 || req.getParams().size() > 3) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+
+    std::string channel_name = req.getParams()[0];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    Channel *ch = _channels[channel_name];
+
+    // Check if the user is a channel operator
+    if (!Channel::userIsChannelOp(_clients[fd], ch))
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+
+    return (this->handleChannelMode(fd, req, ch));
 }

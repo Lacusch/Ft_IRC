@@ -52,6 +52,7 @@ class Server {
     int handlePrivateMsg(int fd, Request req);
     int handleJoinChannel(int fd, Request req);
     int handleChannelMessage(int fd, Request req);
+    int handleMode(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
     Res handleKeyMode(Request req, Channel *ch);
     Res handleUserLimitMode(Request req, Channel *ch);

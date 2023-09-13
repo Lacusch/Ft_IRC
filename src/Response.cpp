@@ -85,8 +85,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
         msg += ":" + this->getName() + " 482 " + client_recipient(client) + " " +
                req.getParams()[0] + " :You're not channel operator" + "\r\n";
     } else if (res == RPL_CHANNELMODEIS) {
-        msg += ":" + this->getName() + " 324 " + client_recipient(client) + " " +
-               req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
+        msg += ":" + this->getName() + " 324 " + _clients[fd]->getUserName() + " " + req.getParams()[0] + " " +  req.getParams()[1] + " " + req.getParams()[2] + " : mode #channel option" + "\r\n";
     } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";

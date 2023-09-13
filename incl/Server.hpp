@@ -52,6 +52,12 @@ class Server {
     int handlePrivateMsg(int fd, Request req);
     int handleJoinChannel(int fd, Request req);
     int handleChannelMessage(int fd, Request req);
+    int handleChannelMode(int fd, Request req, Channel *ch);
+    Res handleKeyMode(Request req, Channel *ch);
+    Res handleUserLimitMode(Request req, Channel *ch);
+    Res handleInviteOnlyMode(Request req, Channel *ch);
+    Res handleTopicMode(Request req, Channel *ch);
+    Res handleOperatorMode(Client *target, Request req, Channel *ch);
 
     std::string create_response(int fd, Res res, Request req);
 

@@ -118,3 +118,141 @@ int Server::handleJoinChannel(int fd, Request req) {
     sendMessage(fd, JOIN_CHANNEL, req);
     return (0);
 }
+
+
+Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
+
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() != 3) return (NOT_ENOUGH_PARAMS);
+
+    if (mode[0] == '+') {
+        if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '+')) return (ERR_USERNOTINCHANNEL);
+    }
+    else if (mode[0] == '-') {
+        if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '-')) return (ERR_USERNOTINCHANNEL);
+    }
+    else { return (ERR_UNKNOWNMODE); }
+
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleTopicMode(Request req, Channel *ch) {
+
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() != 2) return (NOT_ENOUGH_PARAMS);
+
+    if (mode[0] == '+') {
+        ch->setTopicMode(off);
+    }
+    else if (mode[0] == '-') {
+        ch->setTopicMode(on);
+    }
+    else { return (ERR_UNKNOWNMODE); }
+
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+
+    if (mode[0] == '+') {
+        ch->setInviteOnlyMode(on);
+    }
+    else if (mode[0] == '-') {
+        ch->setInviteOnlyMode(off);
+    }
+    else { return (ERR_UNKNOWNMODE); }
+
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleUserLimitMode(Request req, Channel *ch) {
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() == 3) {
+        if (mode[0] == '+') {
+            if (!Utils::isValidUnsignedInt(req.getParams()[2])) return (NOT_ENOUGH_PARAMS);
+            ch->setUserLimitMode(on);
+            unsigned int limit = static_cast<unsigned int>(std::atoi(req.getParams()[2].c_str()));
+            if (!ch->setUserLimit(limit)) {
+                return (printf("%d is not valid limit\n", limit), NOT_ENOUGH_PARAMS);
+            }
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    else {
+        if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+        if (mode[0] == '-') {
+            ch->setUserLimitMode(off);
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleKeyMode(Request req, Channel *ch) {
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() == 3) {
+        if (mode[0] == '+') {
+            ch->setPasswordMode(on);
+            ch->setPassword(req.getParams()[2]);
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    else {
+        if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+        if (mode[0] == '-') {
+            ch->setPasswordMode(off);
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    return (RPL_CHANNELMODEIS);
+}
+
+int Server::handleChannelMode(int fd, Request req, Channel *ch) {
+    (void) fd;
+
+    if (req.getParams().size() < 2) { return (NOT_ENOUGH_PARAMS); }
+    std::string mode = req.getParams()[1];
+    if (mode.length() != 2) {
+        return (ERR_UNKNOWNMODE);
+    }
+    if (mode[0] != + '+' && mode[0] != '-') {
+        return (ERR_UNKNOWNMODE);
+    }
+
+    mode = Utils::to_upper(mode);
+    Res response;
+
+    Client *target = NULL;
+    std::map<int, Client *>::iterator it = _clients.begin();
+    switch (mode[1]) {
+        case 'O':
+
+            for (; it != _clients.end(); ++it) {
+                if (it->second->getNickName() == req.getParams()[2]) {
+                    target = it->second;
+                    break;
+                }
+            }
+            if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+            response = handleOperatorMode(target, req, ch);
+            break ;
+        case 'K':
+            response = handleKeyMode(req, ch);
+            break;
+        case 'L':
+            response = handleUserLimitMode(req, ch);
+            break;
+        case 'T':
+            response = handleTopicMode(req, ch);
+            break;
+        case 'I':
+            response = handleInviteOnlyMode(req, ch);
+            break;
+        default:
+            response = ERR_UNKNOWNMODE;
+            break;
+    }
+    return (sendMessage(fd, response, req));
+}

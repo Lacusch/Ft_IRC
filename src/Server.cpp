@@ -143,6 +143,18 @@ int Server::clientMessage(int i) {
             return (true);
         else if (req.getCommand() == "JOIN")
             return (this->handleJoinChannel(fd, req));
+        else if (req.getCommand() == "MODE") {
+            if (req.getParams().size() == 0) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+                std::string channel_name = req.getParams()[0];
+                channel_name = channel_name.substr(1);
+            if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+            Channel *ch = _channels[channel_name];
+            if (Channel::userIsChannelOp(_clients[fd], ch))
+                return (this->handleChannelMode(fd, req, ch));
+            else {
+                return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+            }
+        }
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }

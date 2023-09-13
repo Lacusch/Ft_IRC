@@ -75,6 +75,18 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == BAD_CHANNEL_STRUCTURE) {
         msg += ":" + this->getName() + " 401 " + client_recipient(client) + " " +
                req.getParams()[0] + " :Channel should begin with #\r\n";
+    } else if (res == ERR_UNKNOWNMODE) {
+        msg += ":" + this->getName() + " 472 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :is unknown mode char" + "\r\n";
+    } else if (res == ERR_USERNOTINCHANNEL) {
+        msg += ":" + this->getName() + " 441 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :They aren't on that channel to me" + "\r\n";
+    } else if (res == ERR_CHANOPRIVSNEEDED) {
+        msg += ":" + this->getName() + " 482 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :You're not channel operator" + "\r\n";
+    } else if (res == RPL_CHANNELMODEIS) {
+        msg += ":" + this->getName() + " 324 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
     } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";

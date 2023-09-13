@@ -11,4 +11,5 @@ class Utils {
     static std::string irc_trim(std::string msg);
     static Request parse_msg(int fd, std::string msg);
     static std::string to_upper(std::string str);
+    static bool isValidUnsignedInt(const std::string& str);
 };

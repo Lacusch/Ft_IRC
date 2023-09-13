@@ -101,3 +101,17 @@ std::string Utils::to_upper(std::string str) {
     }
     return (str);
 }
+
+bool Utils::isValidUnsignedInt(const std::string& str) {
+    if (str.empty()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < str.length(); ++i) {
+        if (!std::isdigit(str[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}

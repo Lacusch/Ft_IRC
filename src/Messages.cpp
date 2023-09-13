@@ -175,7 +175,7 @@ Res Server::handleUserLimitMode(Request req, Channel *ch) {
             ch->setUserLimitMode(on);
             unsigned int limit = static_cast<unsigned int>(std::atoi(req.getParams()[2].c_str()));
             if (!ch->setUserLimit(limit)) {
-                return (printf("%d is not valid limit\n", limit), NOT_ENOUGH_PARAMS);
+                return (NOT_ENOUGH_PARAMS);
             }
         }
         else { return (NOT_ENOUGH_PARAMS); }

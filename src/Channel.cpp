@@ -68,6 +68,9 @@ bool Channel::modifyOpsPrivileges(const std::string& channel_name, const std::st
 	return true;
 }
 
+
+
+
 // ------------------------------------------------------------
 // ------------------------- Setters --------------------------
 // ------------------------------------------------------------
@@ -94,16 +97,22 @@ bool Channel::setUserLimit(unsigned int limit) {
     return true;
 }
 
+
+
+
 // ------------------------------------------------------------
 // ----------------------- Mode Setters -----------------------
 // ------------------------------------------------------------
 
 void Channel::setPasswordMode(State mode) { _passwordMode = mode; }
+
 void Channel::setTopicMode(State mode) { _topicMode = mode; }
 
 void Channel::setInviteOnlyMode(State mode) { _inviteOnly = mode; }
 
 void Channel::setUserLimitMode(State mode) { _userLimitMode = mode; }
+
+
 
 // ------------------------------------------------------------
 // ------------------------- Getters --------------------------
@@ -117,7 +126,6 @@ const std::string& Channel::getPassword() const { return _password; }
 unsigned int Channel::getLimit() const { return _limit; }
 
 bool Channel::isInviteOnly() const { return _inviteOnly; }
-
 void Channel::getMembers() {
     std::map<int, Client*>::iterator it;
     for (it = _members.begin(); it != _members.end(); ++it) {
@@ -128,14 +136,13 @@ void Channel::getMembers() {
 
 unsigned int Channel::getChannelSize() const { return (_members.size()); }
 
-std::map<std::string, std::vector<std::string> > Channel::getOpsList(void) const {
-    return (_ops);
-}
-
 std::map<int, Client*> Channel::getMembersList(void) { return (_members); }
 
+std::map<std::string, std::vector<std::string> > Channel::getOpsList(void) const { return (_ops); }
 
 bool Channel::getPasswordMode() const { return (_passwordMode); }
+
+
 
 // ------------------------------------------------------------
 // -------------------------- Utils ---------------------------

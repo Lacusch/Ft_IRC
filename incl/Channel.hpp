@@ -48,11 +48,11 @@ class Channel {
     const std::string &getPassword() const;  // get the channel password
     unsigned int getLimit() const;           // get the channel limit
     bool isInviteOnly() const;               // check if the channel is invite only
-    bool getPasswordMode() const;
+    bool getPasswordMode() const;            // check if the channel requires a password
     void getMembers();                       // get the members of a channel
     unsigned int getChannelSize() const; // get the number of members
-    std::map<int, Client *> getMembersList(void);
-    std::map<std::string, std::vector<std::string> > getOpsList(void) const;
+    std::map<int, Client *> getMembersList(void); // get the members of a channel
+    std::map<std::string, std::vector<std::string> > getOpsList(void) const; // get the ops of a channel
 
     // Utils
     bool isMember(Client *client, int fd) const;  // check if a client is a member of the channel

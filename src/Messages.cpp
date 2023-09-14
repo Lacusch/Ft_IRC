@@ -15,7 +15,7 @@ int Server::sendMessage(int fd, Res res, Request req) {
 int Server::handlePassword(int fd, Request req) {
     if (req.getParams().size() < 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (req.getParams().size() > 1) return (sendMessage(fd, ENOUGH_PARAMS, req));
-    if (_clients[fd]->isAuthenticated()) return (sendMessage(fd, USER_ALREADY_AUTHENTICATED, req));
+    if (_clients[fd]->isRegistered()) return (sendMessage(fd, USER_ALREADY_AUTHENTICATED, req));
     if (req.getParams().size() == 1 && req.getParams()[0] != this->getPassword())
         return (sendMessage(fd, INCORRERCT_PASSWORD, req));
     if (req.getParams().size() == 1 && req.getParams()[0] == this->getPassword())
@@ -100,8 +100,13 @@ int Server::handleChannelMessage(int fd, Request req) {
 }
 
 int Server::handleJoinChannel(int fd, Request req) {
+
+    if (!_clients[fd]->isRegistered()) return (sendMessage(fd, ERR_NOTREGISTERED, req));
+
     if (req.getParams().size() == 0) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (req.getParams().size() > 2) return (sendMessage(fd, ENOUGH_PARAMS, req));
+
+
     std::string channel_name = req.getParams()[0];
     std::string channel_password = "";
     if (req.getParams().size() == 2) channel_password = req.getParams()[1];
@@ -259,6 +264,8 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
 
 
 int Server::handleMode(int fd, Request req) {
+
+    if (!_clients[fd]->isRegistered()) return (sendMessage(fd, ERR_NOTREGISTERED, req));
 
     if (req.getParams().size() < 2 || req.getParams().size() > 3) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
 

@@ -84,6 +84,8 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == ERR_CHANOPRIVSNEEDED) {
         msg += ":" + this->getName() + " 482 " + client_recipient(client) + " " +
                req.getParams()[0] + " :You're not channel operator" + "\r\n";
+    } else if (res == ERR_NOTREGISTERED) {
+        msg += ":" + this->getName() + " 451 " + client_recipient(client) + " :You have not registered\r\n";
     } else if (res == RPL_CHANNELMODEIS) {
         msg += ":" + this->getName() + " 324 " + _clients[fd]->getUserName() + " " + req.getParams()[0] + " " +  req.getParams()[1] + " " + req.getParams()[2] + " : mode #channel option" + "\r\n";
     } else {

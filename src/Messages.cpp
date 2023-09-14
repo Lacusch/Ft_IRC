@@ -37,8 +37,9 @@ int Server::handleNickName(int fd, Request req) {
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     sendMessage(fd, NICKNAME_REGISTERED, req);
     _clients[fd]->setNickName(nickname);
+    _clients[fd]->setHasNickname(true);
     if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
-        _clients[fd]->getNickName().size() > 0) {
+        _clients[fd]->hasNickname()) {
         sendMessage(fd, RPL_WELCOME, req);
         sendMessage(fd, RPL_YOURHOST, req);
         sendMessage(fd, RPL_CREATED, req);
@@ -63,7 +64,7 @@ int Server::handleUser(int fd, Request req) {
     else
         _clients[fd]->setRealName(req.getParams()[0]);
     if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
-        _clients[fd]->getNickName().size() > 0) {
+        _clients[fd]->hasNickname()) {
         sendMessage(fd, RPL_WELCOME, req);
         sendMessage(fd, RPL_YOURHOST, req);
         sendMessage(fd, RPL_CREATED, req);
@@ -118,11 +119,14 @@ int Server::handleJoinChannel(int fd, Request req) {
     channel->join(_clients[fd], fd);
     channel->getMembers();
     sendMessage(fd, JOIN_CHANNEL, req);
-    sendMessage(fd, TOPIC_SET, req);
+    // sendMessage(fd, TOPIC_SET, req);
     std::string response_msg = ":mr.server.com 353 a = #test :a\r\n";
     Utils::print(G, response_msg);
     send(fd, response_msg.c_str(), response_msg.size(), 0);
     response_msg = ":mr.server.com 366 a #test :End of NAMES list\r\n";
+    Utils::print(G, response_msg);
+    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    response_msg = ":mr.server.com MODE #test +o a\r\n";
     Utils::print(G, response_msg);
     send(fd, response_msg.c_str(), response_msg.size(), 0);
     return (0);

@@ -6,6 +6,7 @@ class Client {
     int _fd;
     bool _isAuthenticated;
     bool _isRegistered;
+    bool _hasNickname;
     bool _isOperator;
     bool _welcomeMessageDelivered;
     std::string _nickName;
@@ -20,9 +21,11 @@ class Client {
 
     bool isAuthenticated(void) const;
     bool isRegistered(void) const;
+    bool hasNickname(void) const;
     bool isOperator(void) const;
 
     void setRegistration(bool isRegistered);
+    void setHasNickname(bool hasNickname);
     void setAuthentication(bool isAuthenticated);
     void setOperator(bool isOperator);
     void setWelcomeMessageDelivered(bool delivered);

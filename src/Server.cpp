@@ -131,23 +131,24 @@ int Server::clientMessage(int i) {
             std::string nickname = ":server 464 * :Please provide the server password\r\n";
             return (send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0));
         }
-        if (req.getCommand() == "NICK")
-            return (this->handleNickName(fd, req));
-        else if (req.getCommand() == "USER")
-            return (this->handleUser(fd, req));
-        // Registered Middleware
-        else if (req.getCommand() == "PRIVMSG")
+        if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
+        if (req.getCommand() == "USER") return (this->handleUser(fd, req));
+        if (!_clients[fd]->isRegistered() || !_clients[fd]->hasNickname()) {
+            std::string msg_register = ":mr:server.com 464 * :Yo must register before\r\n";
+            return (send(_sockets[i].fd, msg_register.c_str(), msg_register.size(), 0));
+        }
+        if (req.getCommand() == "PRIVMSG")
             return (this->handlePrivateMsg(fd, req));
         else if (req.getCommand() == "PING")
             return (true);
         else if (req.getCommand() == "NOTICE")
             return (true);
-        else if (req.getCommand() == "MODE")
-            return (true);
         else if (req.getCommand() == "WHO")
             return (this->handleWho(fd, req));
         else if (req.getCommand() == "JOIN")
             return (this->handleJoinChannel(fd, req));
+        else if (req.getCommand() == "MODE")
+            return (this->handlM);
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }

@@ -121,10 +121,22 @@ int Server::clientMessage(int i) {
         Utils::print(R, "Error: recv");
     else {
         int fd = _sockets[i].fd;
-        std::string clientMessage(buffer, bytesRead);
-        Request req = Utils::parse_msg(fd, Utils::irc_trim(clientMessage));
+
+        Client *client = _clients.find(fd)->second;
+
+        std::string msg(buffer, bytesRead);
+        if (client->getNickName() != "") {
+            client->msgBuffer += msg;
+            if (msg[msg.length() - 1] != '\n') { return true; }
+        }
+        else
+            client->msgBuffer += msg;
+        Request req = Utils::parse_msg(fd, Utils::irc_trim(client->msgBuffer));
         req.setCommand(Utils::to_upper(req.getCommand()));
-        Utils::print(G, clientMessage);
+
+        // delete the message from the buffer
+        client->msgBuffer.clear();
+
         if (req.getCommand().length() == 0) return (sendMessage(fd, UNKNWON_COMMAND, req));
         if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
         if (!_clients[_sockets[i].fd]->isAuthenticated()) {

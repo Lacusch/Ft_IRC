@@ -16,6 +16,7 @@ class Channel {
     unsigned int _limit;
     bool _inviteOnly;
     std::map<int, Client *> _members;
+    std::map<std::string, std::vector<std::string> > _ops; // channel name is key and list of ops is value
     State _topicMode;
     State _passwordMode;
     State _userLimitMode;
@@ -29,6 +30,7 @@ class Channel {
     bool kick(Client *client, int fd);    // kick a client from the channel
     bool invite(Client *client, int fd);  // invite a client to the channel
     bool leave(Client *client, int fd);   // leave the channel specified
+    bool modifyOpsPrivileges(const std::string &channel_name, const std::string &nickname, char flag);
 
     // Setters
     bool setTopic(const std::string &topic);        // set the chann`l topic

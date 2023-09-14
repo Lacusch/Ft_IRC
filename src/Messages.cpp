@@ -1,5 +1,3 @@
-#include <string>
-
 #include "../incl/Responses.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Shared.hpp"
@@ -137,4 +135,162 @@ int Server::handleWho(int fd, Request req) {
     send(fd, response_msg.c_str(), response_msg.size(), 0);
     Utils::print(G, response_msg);
     return (0);
+}
+
+
+Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
+
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() != 3) return (NOT_ENOUGH_PARAMS);
+
+    if (mode[0] == '+') {
+        if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '+')) return (ERR_USERNOTINCHANNEL);
+    }
+    else if (mode[0] == '-') {
+        if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '-')) return (ERR_USERNOTINCHANNEL);
+    }
+    else { return (ERR_UNKNOWNMODE); }
+
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleTopicMode(Request req, Channel *ch) {
+
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() != 2) return (NOT_ENOUGH_PARAMS);
+
+    if (mode[0] == '+') {
+        ch->setTopicMode(off);
+    }
+    else if (mode[0] == '-') {
+        ch->setTopicMode(on);
+    }
+    else { return (ERR_UNKNOWNMODE); }
+
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+
+    if (mode[0] == '+') {
+        ch->setInviteOnlyMode(on);
+    }
+    else if (mode[0] == '-') {
+        ch->setInviteOnlyMode(off);
+    }
+    else { return (ERR_UNKNOWNMODE); }
+
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleUserLimitMode(Request req, Channel *ch) {
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() == 3) {
+        if (mode[0] == '+') {
+            if (!Utils::isValidUnsignedInt(req.getParams()[2])) return (NOT_ENOUGH_PARAMS);
+            ch->setUserLimitMode(on);
+            unsigned int limit = static_cast<unsigned int>(std::atoi(req.getParams()[2].c_str()));
+            if (!ch->setUserLimit(limit)) {
+                return (NOT_ENOUGH_PARAMS);
+            }
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    else {
+        if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+        if (mode[0] == '-') {
+            ch->setUserLimitMode(off);
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    return (RPL_CHANNELMODEIS);
+}
+
+Res Server::handleKeyMode(Request req, Channel *ch) {
+    std::string mode = req.getParams()[1];
+    if (req.getParams().size() == 3) {
+        if (mode[0] == '+') {
+            ch->setPasswordMode(on);
+            ch->setPassword(req.getParams()[2]);
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    else {
+        if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+        if (mode[0] == '-') {
+            ch->setPasswordMode(off);
+        }
+        else { return (NOT_ENOUGH_PARAMS); }
+    }
+    return (RPL_CHANNELMODEIS);
+}
+
+int Server::handleChannelMode(int fd, Request req, Channel *ch) {
+
+
+    if (req.getParams().size() < 2) { return sendMessage(fd, NOT_ENOUGH_PARAMS, req); }
+    std::string mode = req.getParams()[1];
+    if (mode.length() != 2) {
+        return (sendMessage(fd, ERR_UNKNOWNMODE, req));
+    }
+    if (mode[0] != '+' && mode[0] != '-') {
+        return (sendMessage(fd, ERR_UNKNOWNMODE, req));
+    }
+
+    mode = Utils::to_upper(mode);
+    Res response;
+
+    Client *target = NULL;
+    std::map<int, Client *>::iterator it = _clients.begin();
+    switch (mode[1]) {
+        case 'O':
+            if (req.getParams()[2].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+            for (; it != _clients.end(); ++it) {
+                if (it->second->getNickName() == req.getParams()[2]) {
+                    target = it->second;
+                    break;
+                }
+            }
+            if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+            response = handleOperatorMode(target, req, ch);
+            break ;
+        case 'K':
+            response = handleKeyMode(req, ch);
+            break;
+        case 'L':
+            response = handleUserLimitMode(req, ch);
+            break;
+        case 'T':
+            response = handleTopicMode(req, ch);
+            break;
+        case 'I':
+            response = handleInviteOnlyMode(req, ch);
+            break;
+        default:
+            response = ERR_UNKNOWNMODE;
+            break;
+    }
+    return (sendMessage(fd, response, req));
+}
+
+
+int Server::handleMode(int fd, Request req) {
+    if (req.getParams().size() < 2 || req.getParams().size() > 3) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    std::string channel_name = req.getParams()[0];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    Channel *ch = _channels[channel_name];
+
+    // Check if the user is a channel operator
+    if (!Channel::userIsChannelOp(_clients[fd], ch))
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+
+    return (this->handleChannelMode(fd, req, ch));
 }

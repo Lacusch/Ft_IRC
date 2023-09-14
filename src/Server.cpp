@@ -160,6 +160,9 @@ int Server::clientMessage(int i) {
             return (this->handleWho(fd, req));
         else if (req.getCommand() == "JOIN")
             return (this->handleJoinChannel(fd, req));
+        else if (req.getCommand() == "MODE") {
+            return (this->handleMode(fd, req));
+        }
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }

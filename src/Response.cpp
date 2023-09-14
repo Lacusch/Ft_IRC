@@ -81,6 +81,19 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == WHO_CHANNEL) {
         msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
                "@127.0.0.0 " + this->getName() + " " + _clients[fd]->getNickName() + " 1 \r\n";
+    } else if (res == ERR_UNKNOWNMODE) {
+        msg += ":" + this->getName() + " 472 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :is unknown mode char" + "\r\n";
+    } else if (res == ERR_USERNOTINCHANNEL) {
+        msg += ":" + this->getName() + " 441 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :They aren't on that channel to me" + "\r\n";
+    } else if (res == ERR_CHANOPRIVSNEEDED) {
+        msg += ":" + this->getName() + " 482 " + client_recipient(client) + " " +
+               req.getParams()[0] + " :You're not channel operator" + "\r\n";
+    } else if (res == ERR_NOTREGISTERED) {
+        msg += ":" + this->getName() + " 451 " + client_recipient(client) + " :You have not registered\r\n";
+    } else if (res == RPL_CHANNELMODEIS) {
+        msg += ":" + this->getName() + " 324 " + _clients[fd]->getUserName() + " " + req.getParams()[0] + " " +  req.getParams()[1] + " " + req.getParams()[2] + " : mode #channel option" + "\r\n";
     } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";

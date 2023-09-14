@@ -1,3 +1,5 @@
+#include <string>
+
 #include "../incl/Responses.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Shared.hpp"
@@ -6,7 +8,7 @@
 int Server::sendMessage(int fd, Res res, Request req) {
     int sendFd = fd;
     std::string response_msg = this->create_response(fd, res, req);
-    if (req.getCommand() == "PRIVMSG") sendFd = req.getReceiverFd();
+    sendFd = req.getReceiverFd();
     int res_status = send(sendFd, response_msg.c_str(), response_msg.size(), 0);
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
@@ -116,5 +118,23 @@ int Server::handleJoinChannel(int fd, Request req) {
     channel->join(_clients[fd], fd);
     channel->getMembers();
     sendMessage(fd, JOIN_CHANNEL, req);
+    sendMessage(fd, TOPIC_SET, req);
+    std::string response_msg = ":mr.server.com 353 a = #test :a\r\n";
+    Utils::print(G, response_msg);
+    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    response_msg = ":mr.server.com 366 a #test :End of NAMES list\r\n";
+    Utils::print(G, response_msg);
+    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    return (0);
+}
+
+int Server::handleWho(int fd, Request req) {
+    (void)req;
+    std::string response_msg = ":a!a@127.0.0.1 mr.server.com a H :O a 1\r\n";
+    Utils::print(G, response_msg);
+    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    response_msg = ":mr.server.com 315 a #test :End of /WHO list\r\n";
+    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    Utils::print(G, response_msg);
     return (0);
 }

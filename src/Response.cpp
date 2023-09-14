@@ -75,6 +75,12 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == BAD_CHANNEL_STRUCTURE) {
         msg += ":" + this->getName() + " 401 " + client_recipient(client) + " " +
                req.getParams()[0] + " :Channel should begin with #\r\n";
+    } else if (res == TOPIC_SET) {
+        msg += ":" + this->getName() + " 332 " + client_recipient(client) + " " +
+               req.getParams()[0] + " : *\r\n";
+    } else if (res == WHO_CHANNEL) {
+        msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
+               "@127.0.0.0 " + this->getName() + " " + _clients[fd]->getNickName() + " 1 \r\n";
     } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";

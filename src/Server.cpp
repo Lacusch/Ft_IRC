@@ -135,12 +135,17 @@ int Server::clientMessage(int i) {
             return (this->handleNickName(fd, req));
         else if (req.getCommand() == "USER")
             return (this->handleUser(fd, req));
+        // Registered Middleware
         else if (req.getCommand() == "PRIVMSG")
             return (this->handlePrivateMsg(fd, req));
         else if (req.getCommand() == "PING")
             return (true);
         else if (req.getCommand() == "NOTICE")
             return (true);
+        else if (req.getCommand() == "MODE")
+            return (true);
+        else if (req.getCommand() == "WHO")
+            return (this->handleWho(fd, req));
         else if (req.getCommand() == "JOIN")
             return (this->handleJoinChannel(fd, req));
         else

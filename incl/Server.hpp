@@ -52,6 +52,7 @@ class Server {
     int handlePrivateMsg(int fd, Request req);
     int handleJoinChannel(int fd, Request req);
     int handleChannelMessage(int fd, Request req);
+    int handleWho(int fd, Request req);
 
     std::string create_response(int fd, Res res, Request req);
 

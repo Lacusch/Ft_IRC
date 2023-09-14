@@ -154,8 +154,6 @@ int Server::clientMessage(int i) {
             return (true);
         else if (req.getCommand() == "NOTICE")
             return (true);
-        else if (req.getCommand() == "MODE")
-            return (true);
         else if (req.getCommand() == "WHO")
             return (this->handleWho(fd, req));
         else if (req.getCommand() == "JOIN")

@@ -114,7 +114,7 @@ int Server::handleJoinChannel(int fd, Request req) {
     }
     Channel* channel = _channels[channel_name];
     channel->join(_clients[fd], fd);
-    channel->getMembers();
+    channel->printMembers();     // For Testing purpose only
     sendMessage(fd, JOIN_CHANNEL, req);
     sendMessage(fd, TOPIC_SET, req);
     std::string response_msg = ":mr.server.com 353 a = #test :a\r\n";
@@ -229,7 +229,6 @@ Res Server::handleKeyMode(Request req, Channel *ch) {
 
 int Server::handleChannelMode(int fd, Request req, Channel *ch) {
 
-
     if (req.getParams().size() < 2) { return sendMessage(fd, NOT_ENOUGH_PARAMS, req); }
     std::string mode = req.getParams()[1];
     if (mode.length() != 2) {
@@ -293,4 +292,105 @@ int Server::handleMode(int fd, Request req) {
         return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
 
     return (this->handleChannelMode(fd, req, ch));
+}
+
+int Server::handleKick(int fd, Request req) {
+    if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    std::string channel_name = req.getParams()[0];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    Channel *ch = _channels[channel_name];
+
+    if (!ch->isMember(_clients[fd],fd))
+        return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+
+    if (!Channel::userIsChannelOp(_clients[fd], _channels[channel_name]))
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+
+    Client *target = NULL;
+    std::map<int, Client *>::iterator it = _clients.begin();
+    if (req.getParams()[1].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    for (; it != _clients.end(); ++it) {
+        if (it->second->getNickName() == req.getParams()[1]) {
+            target = it->second;
+            break;
+        }
+    }
+    if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    int targetFd = target->getFd();
+    if (!ch->kick(target, targetFd)) return (sendMessage(fd, ERR_USERNOTINCHANNEL, req));
+    if (Channel::userIsChannelOp(target, ch)) {
+        ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '-');
+    }
+
+    return (sendMessage(fd, RPL_KICKED, req));
+}
+
+int Server::handleInvite(int fd, Request req) {
+    if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    std::string channel_name = req.getParams()[1];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    Channel *ch = _channels[channel_name];
+
+    if (!ch->isMember(_clients[fd],fd))
+        return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+
+    if (!Channel::userIsChannelOp(_clients[fd], _channels[channel_name]))
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+
+    Client *target = NULL;
+    std::map<int, Client *>::iterator it = _clients.begin();
+    if (req.getParams()[0].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    for (; it != _clients.end(); ++it) {
+        if (it->second->getNickName() == req.getParams()[0]) {
+            target = it->second;
+            break;
+        }
+    }
+    if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    int targetFd = target->getFd();
+    if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
+
+    if (ch->getLimit() == ch->getChannelSize())
+        return (sendMessage(fd, ERR_CHANNELISFULL, req));
+
+    return sendMessage(fd, RPL_INVITING, req);
+}
+
+int Server::handleTopic(int fd, Request req) {
+    if (req.getParams().size() == 0 || req.getParams().size() > 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    std::string channel_name = req.getParams()[0];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    Channel *ch = _channels[channel_name];
+
+    if (!ch->isMember(_clients[fd],fd))
+        return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+
+    if (req.getParams().size() == 1) {
+        req.setParams(ch->getTopic());
+        return (ch->getTopic().empty()) ?  (sendMessage(fd, RPL_NOTOPIC, req)) : (sendMessage(fd, RPL_TOPIC, req));
+    }
+
+    if (ch->getTopicMode() == off) {
+        if (!Channel::userIsChannelOp(_clients[fd], _channels[channel_name]))
+            return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+    }
+    ch->setTopic(req.getParams()[1]);
+    return (sendMessage(fd, RPL_TOPIC, req));
 }

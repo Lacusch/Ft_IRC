@@ -6,7 +6,7 @@ Channel::Channel(std::string& name, std::string& password)
       _topic(""),
       _limit(200),
       _inviteOnly(off),
-      _topicMode(on),
+      _topicMode(off),
       _passwordMode(on),
       _userLimitMode(off) {
     Utils::print(B, "Men this -> " + this->_name + " is not easy");
@@ -15,7 +15,7 @@ Channel::Channel(std::string& name, std::string& password)
 Channel::~Channel() {}
 
 // ------------------------------------------------------------
-// --------------------- Channel Methods ----------------------
+//  Channel Methods 
 // ------------------------------------------------------------
 bool Channel::join(Client* client, int fd) {
     if (isMember(client, fd)) return false;       // Client is already in the channel
@@ -27,6 +27,8 @@ bool Channel::join(Client* client, int fd) {
     if (_members.size() == 1) {
 		_ops[this->getName()].push_back(client->getNickName());
 	}
+
+    // For Testing purpose
 	Utils::print(Y, "Operators of channel: ");
 	for (std::map<std::string, std::vector<std::string> >::iterator it = this->_ops.begin(); it != this->_ops.end(); ++it) {
 		std::vector<std::string> savedOperators = it->second;
@@ -35,7 +37,6 @@ bool Channel::join(Client* client, int fd) {
 			savedOperators.pop_back();
 		}
 	}
-
 	std::cout << "Client " << fd << " " << _members[fd]->getNickName() << " joined the channel." << std::endl;
 
 	return true;
@@ -71,12 +72,11 @@ bool Channel::modifyOpsPrivileges(const std::string& channel_name, const std::st
 
 
 
-// ------------------------------------------------------------
-// ------------------------- Setters --------------------------
-// ------------------------------------------------------------
+// ----------------------------------------------------------
+//  Setters 
+// ----------------------------------------------------------
 bool Channel::setTopic(const std::string& topic) {
     if (isTopicValid(topic)) {
-        if (_topicMode == off) return false;
         _topic = topic;
         return true;
     }
@@ -101,7 +101,7 @@ bool Channel::setUserLimit(unsigned int limit) {
 
 
 // ------------------------------------------------------------
-// ----------------------- Mode Setters -----------------------
+//  Mode Setters
 // ------------------------------------------------------------
 
 void Channel::setPasswordMode(State mode) { _passwordMode = mode; }
@@ -115,7 +115,7 @@ void Channel::setUserLimitMode(State mode) { _userLimitMode = mode; }
 
 
 // ------------------------------------------------------------
-// ------------------------- Getters --------------------------
+//  Getters
 // ------------------------------------------------------------
 const std::string& Channel::getName() const { return _name; }
 
@@ -126,7 +126,7 @@ const std::string& Channel::getPassword() const { return _password; }
 unsigned int Channel::getLimit() const { return _limit; }
 
 bool Channel::isInviteOnly() const { return _inviteOnly; }
-void Channel::getMembers() {
+void Channel::printMembers() {
     std::map<int, Client*>::iterator it;
     for (it = _members.begin(); it != _members.end(); ++it) {
         Client* client = it->second;
@@ -142,18 +142,33 @@ std::map<std::string, std::vector<std::string> > Channel::getOpsList(void) const
 
 bool Channel::getPasswordMode() const { return (_passwordMode); }
 
+bool Channel::getTopicMode() const { return (_topicMode); }
 
 
-// ------------------------------------------------------------
-// -------------------------- Utils ---------------------------
-// ------------------------------------------------------------
+
+// ----------------------------------------------------------
+//  Utils
+// ----------------------------------------------------------
 bool Channel::isMember(Client* client, int fd) const {
-    return (_members.find(fd) != _members.end() && _members.at(fd) == client);
+    // return (_members.find(fd) != _members.end() && _members.at(fd) == client);
+    (void) fd;
+    std::map<int, Client*>memberList = _members;
+
+    std::map<int, Client*>::iterator it;
+
+    for (it = memberList.begin(); it != memberList.end(); ++it) {
+        if (it->second == client) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Channel::isTopicValid(const std::string& topic) {
     // check if topic has no line breaks
     if (topic.find('\n') != std::string::npos) return false;
+    if (topic.empty()) return false;
+
     return true;
 }
 

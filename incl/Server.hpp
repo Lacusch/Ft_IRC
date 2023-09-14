@@ -54,6 +54,9 @@ class Server {
     int handleChannelMessage(int fd, Request req);
     int handleWho(int fd, Request req);
     int handleMode(int fd, Request req);
+    int handleKick(int fd, Request req);
+    int handleInvite(int fd, Request req);
+    int handleTopic(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
     Res handleKeyMode(Request req, Channel *ch);
     Res handleUserLimitMode(Request req, Channel *ch);

@@ -109,9 +109,9 @@ int main(int argc, char **argv) {
     (void) argc;
     (void) argv;
 
-    channel_playground();
-    // if (argc != 3) return (Utils::print_error(INVALID_ARGC));
-    // Server server(SERVER_NAME, SERVER_VERSION, argv[1], argv[2]);
-    // if (server.valid_args() || server.start_server()) return (1);
-    // server.run();
+    // channel_playground();
+    if (argc != 3) return (Utils::print_error(INVALID_ARGC));
+    Server server(SERVER_NAME, SERVER_VERSION, argv[1], argv[2]);
+    if (server.valid_args() || server.start_server()) return (1);
+    server.run();
 };

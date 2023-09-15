@@ -8,6 +8,7 @@ int Server::sendMessage(int fd, Res res, Request req) {
     std::string response_msg = this->create_response(fd, res, req);
     sendFd = req.getReceiverFd();
     int res_status = send(sendFd, response_msg.c_str(), response_msg.size(), 0);
+    Utils::print(G, response_msg);
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
 }
@@ -75,13 +76,22 @@ int Server::handlePrivateMsg(int fd, Request req) {
     if (req.getParams().size() == 0) return (sendMessage(fd, ERR_NORECIPIENT, req));
     if (req.getTrailing().size() == 0) return (sendMessage(fd, NO_TEXT_TO_SEND, req));
     int recipient_fd = this->getFdFromNickName(req.getParams()[0]);
-    if (recipient_fd == -1 && req.getParams()[0][0] == '#') {
-        handleChannelMessage(fd, req);
-        return (0);
-    }
+    if (recipient_fd == -1 && req.getParams()[0][0] == '#') return (handleChannelMessage(fd, req));
     if (recipient_fd == -1) return (sendMessage(fd, ERR_NOSUCHNICK, req));
     req.setReceiverFd(recipient_fd);
     sendMessage(fd, SEND_PRIVATE_MESSAGE, req);
+    return (0);
+}
+
+int Server::handlePing(int fd, Request req) {
+    (void)req;
+    (void)fd;
+    return (0);
+}
+
+int Server::handleWho(int fd, Request req) {
+    (void)req;
+    (void)fd;
     return (0);
 }
 
@@ -105,6 +115,7 @@ int Server::handleJoinChannel(int fd, Request req) {
     if (req.getParams().size() > 2) return (sendMessage(fd, ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[0];
     std::string channel_password = "";
+
     if (req.getParams().size() == 2) channel_password = req.getParams()[1];
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
     channel_name = channel_name.substr(1);
@@ -116,36 +127,48 @@ int Server::handleJoinChannel(int fd, Request req) {
     Channel *channel = _channels[channel_name];
     // check if user is already in channel
     channel->join(_clients[fd], fd);
-    channel->getMembers();
     sendMessage(fd, JOIN_CHANNEL, req);
-    // sendMessage(fd, TOPIC_SET, req);
+
     std::string response_msg = ":mr.server.com 353 a = #test :a\r\n";
-    Utils::print(G, response_msg);
+    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    response_msg = ":mr.server.com 353 b = #test :b\r\n";
     send(fd, response_msg.c_str(), response_msg.size(), 0);
     response_msg = ":mr.server.com 366 a #test :End of NAMES list\r\n";
-    Utils::print(G, response_msg);
     send(fd, response_msg.c_str(), response_msg.size(), 0);
+
     response_msg = ":mr.server.com MODE #test +o a\r\n";
     Utils::print(G, response_msg);
     send(fd, response_msg.c_str(), response_msg.size(), 0);
     return (0);
 }
 
-int Server::handleWho(int fd, Request req) {
-    (void)req;
-    std::string response_msg = ":a!a@127.0.0.1 mr.server.com a H :O a 1\r\n";
-    // Utils::print(G, response_msg);
-    // send(fd, response_msg.c_str(), response_msg.size(), 0);
-    response_msg = ":mr.server.com 315 a #test :End of /WHO list\r\n";
-    send(fd, response_msg.c_str(), response_msg.size(), 0);
-    Utils::print(G, response_msg);
-    return (0);
+int Server::handleMode(int fd, Request req) {
+    if (req.getParams().size() == 1) {
+        std::string response_msg = ":mr.server.com 324 a #test +t\r\n";
+        return (send(fd, response_msg.c_str(), response_msg.size(), 0));
+    } else if (req.getParams().size() == 2) {
+        if (req.getParams()[1] == "b") return (0);
+    }
+    if (req.getParams().size() < 2 || req.getParams().size() > 3)
+        return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    std::string channel_name = req.getParams()[0];
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+
+    Channel *ch = _channels[channel_name];
+
+    // Check if the user is a channel operator
+    if (!Channel::userIsChannelOp(_clients[fd], ch))
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+    return (this->handleChannelMode(fd, req, ch));
 }
 
 Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
     std::string mode = req.getParams()[1];
     if (req.getParams().size() != 3) return (NOT_ENOUGH_PARAMS);
-
     if (mode[0] == '+') {
         if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '+'))
             return (ERR_USERNOTINCHANNEL);
@@ -155,14 +178,12 @@ Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
     } else {
         return (ERR_UNKNOWNMODE);
     }
-
     return (RPL_CHANNELMODEIS);
 }
 
 Res Server::handleTopicMode(Request req, Channel *ch) {
     std::string mode = req.getParams()[1];
     if (req.getParams().size() != 2) return (NOT_ENOUGH_PARAMS);
-
     if (mode[0] == '+') {
         ch->setTopicMode(off);
     } else if (mode[0] == '-') {
@@ -170,7 +191,6 @@ Res Server::handleTopicMode(Request req, Channel *ch) {
     } else {
         return (ERR_UNKNOWNMODE);
     }
-
     return (RPL_CHANNELMODEIS);
 }
 
@@ -179,7 +199,6 @@ Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
     if (req.getParams().size() != 2) {
         return (NOT_ENOUGH_PARAMS);
     }
-
     if (mode[0] == '+') {
         ch->setInviteOnlyMode(on);
     } else if (mode[0] == '-') {
@@ -187,7 +206,6 @@ Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
     } else {
         return (ERR_UNKNOWNMODE);
     }
-
     return (RPL_CHANNELMODEIS);
 }
 
@@ -285,25 +303,4 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
             break;
     }
     return (sendMessage(fd, response, req));
-}
-
-int Server::handleMode(int fd, Request req) {
-    std::string response_msg = ":mr.server.com 324 a #test +t\r\n";
-    return (send(fd, response_msg.c_str(), response_msg.size(), 0));
-
-    if (req.getParams().size() < 2 || req.getParams().size() > 3)
-        return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
-    std::string channel_name = req.getParams()[0];
-    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
-
-    channel_name = channel_name.substr(1);
-
-    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
-
-    Channel *ch = _channels[channel_name];
-
-    // Check if the user is a channel operator
-    if (!Channel::userIsChannelOp(_clients[fd], ch))
-        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
-    return (this->handleChannelMode(fd, req, ch));
 }

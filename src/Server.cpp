@@ -152,7 +152,7 @@ int Server::clientMessage(int i) {
         if (req.getCommand() == "PRIVMSG")
             return (this->handlePrivateMsg(fd, req));
         else if (req.getCommand() == "PING")
-            return (true);
+            return (this->handlePing(fd, req));
         else if (req.getCommand() == "NOTICE")
             return (true);
         else if (req.getCommand() == "WHO")

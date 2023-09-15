@@ -55,8 +55,8 @@ std::string Server::create_response(int fd, Res res, Request req) {
                (client->getUserName().size() ? client->getUserName() : "*") + "@127.0.0.1" +
                " NICK " + req.getParams()[0] + "\r\n";
     } else if (res == SEND_PRIVATE_MESSAGE) {
-        msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() + "@0.0.0.0" +
-               " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
+        msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
+               "@127.0.0.1" + " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
     } else if (res == UNKNWON_COMMAND) {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " " +
                (req.getCommand().size() ? req.getCommand() : "") + " :Unknown command" + "\r\n";
@@ -91,9 +91,12 @@ std::string Server::create_response(int fd, Res res, Request req) {
         msg += ":" + this->getName() + " 482 " + client_recipient(client) + " " +
                req.getParams()[0] + " :You're not channel operator" + "\r\n";
     } else if (res == ERR_NOTREGISTERED) {
-        msg += ":" + this->getName() + " 451 " + client_recipient(client) + " :You have not registered\r\n";
+        msg += ":" + this->getName() + " 451 " + client_recipient(client) +
+               " :You have not registered\r\n";
     } else if (res == RPL_CHANNELMODEIS) {
-        msg += ":" + this->getName() + " 324 " + _clients[fd]->getUserName() + " " + req.getParams()[0] + " " +  req.getParams()[1] + " " + req.getParams()[2] + " : mode #channel option" + "\r\n";
+        msg += ":" + this->getName() + " 324 " + _clients[fd]->getUserName() + " " +
+               req.getParams()[0] + " " + req.getParams()[1] + " " + req.getParams()[2] +
+               " : mode #channel option" + "\r\n";
     } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";

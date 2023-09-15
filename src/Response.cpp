@@ -114,8 +114,9 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == ERR_INVITEONLYCHAN) {
         msg += ":" + this->getName() + " 473 " + client_recipient(client) + " " +
                req.getParams()[0] + " :Cannot join channel (+i)" + "\r\n";
-    }
-    else {
+    } else if (res == ERR_USERSDONTMATCH) {
+        msg +=":" + this->getName() + " 502 " + client_recipient(client) + " " + req.getParams()[0] + " :" + client_recipient(client) + " is already an operator" "\r\n";
+    } else {
         msg += ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
                "\r\n";
     }

@@ -144,6 +144,7 @@ Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
     if (req.getParams().size() != 3) return (NOT_ENOUGH_PARAMS);
 
     if (mode[0] == '+') {
+        if (Channel::userIsChannelOp(target, ch)) return (ERR_USERSDONTMATCH);
         if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '+')) return (ERR_USERNOTINCHANNEL);
     }
     else if (mode[0] == '-') {

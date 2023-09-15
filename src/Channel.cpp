@@ -19,7 +19,7 @@ Channel::~Channel() {}
 // ------------------------------------------------------------
 bool Channel::join(Client* client, int fd) {
     if (isMember(client, fd)) return false;       // Client is already in the channel
-    if (_members.size() >= _limit) return false;  // Channel is full
+    // if (_members.size() >= _limit) return false;  // Channel is full (Check not required here, should be done by the server)
 
     _members[fd] = client;  // Add the client to the list of members
 	Utils::print(P, "Current size of channel: " + this->getName() + " -> ", 0);
@@ -50,7 +50,7 @@ bool Channel::kick(Client* client, int fd) {
 
 bool Channel::invite(Client* client, int fd) {
     if (isMember(client, fd)) return false;  // Client is already in the channel
-    return true;                             // Client is not in the channel
+    return true;
 }
 
 bool Channel::leave(Client* client, int fd) {
@@ -75,6 +75,7 @@ bool Channel::modifyOpsPrivileges(const std::string& channel_name, const std::st
 // ----------------------------------------------------------
 //  Setters 
 // ----------------------------------------------------------
+
 bool Channel::setTopic(const std::string& topic) {
     if (isTopicValid(topic)) {
         _topic = topic;
@@ -117,6 +118,7 @@ void Channel::setUserLimitMode(State mode) { _userLimitMode = mode; }
 // ------------------------------------------------------------
 //  Getters
 // ------------------------------------------------------------
+
 const std::string& Channel::getName() const { return _name; }
 
 const std::string& Channel::getTopic() const { return _topic; }
@@ -126,6 +128,15 @@ const std::string& Channel::getPassword() const { return _password; }
 unsigned int Channel::getLimit() const { return _limit; }
 
 bool Channel::isInviteOnly() const { return _inviteOnly; }
+
+unsigned int Channel::getChannelSize() const { return (_members.size()); }
+
+bool Channel::getPasswordMode() const { return (_passwordMode); }
+
+bool Channel::getTopicMode() const { return (_topicMode); }
+
+std::map<int, Client*> Channel::getMembersList(void) { return (_members); }
+
 void Channel::printMembers() {
     std::map<int, Client*>::iterator it;
     for (it = _members.begin(); it != _members.end(); ++it) {
@@ -134,23 +145,29 @@ void Channel::printMembers() {
     }
 }
 
-unsigned int Channel::getChannelSize() const { return (_members.size()); }
+std::vector<std::string> Channel::getOpsList(void) {
 
-std::map<int, Client*> Channel::getMembersList(void) { return (_members); }
+    std::map<std::string, std::vector<std::string> >::iterator it;
+    std::vector<std::string> savedOperators;
 
-std::map<std::string, std::vector<std::string> > Channel::getOpsList(void) const { return (_ops); }
+    for (it = _ops.begin(); it != _ops.end(); ++it) {
+        if (it->first == this->getName()) {
+            savedOperators = it->second;
+            break;
+        }
+    }
+    return (savedOperators);
+}
 
-bool Channel::getPasswordMode() const { return (_passwordMode); }
-
-bool Channel::getTopicMode() const { return (_topicMode); }
 
 
 
 // ----------------------------------------------------------
 //  Utils
 // ----------------------------------------------------------
+
 bool Channel::isMember(Client* client, int fd) const {
-    // return (_members.find(fd) != _members.end() && _members.at(fd) == client);
+
     (void) fd;
     std::map<int, Client*>memberList = _members;
 
@@ -173,14 +190,13 @@ bool Channel::isTopicValid(const std::string& topic) {
 }
 
 bool Channel::userIsChannelOp(Client *client, Channel *chName) {
-    std::map<std::string, std::vector<std::string> > chOps = chName->getOpsList();
-    std::map<std::string, std::vector<std::string> >::iterator it;
+
+    std::vector<std::string> chOps = chName->getOpsList();
+    std::vector<std::string>::iterator it;
+
     for (it = chOps.begin(); it != chOps.end(); ++it) {
-        std::vector<std::string> savedOperators = it->second;
-        while (savedOperators.size() > 0) {
-            if (savedOperators.back() == client->getNickName()) return true;
-            savedOperators.pop_back();
-        }
+        if (*it == client->getNickName()) return true;
     }
+
     return false;
 }

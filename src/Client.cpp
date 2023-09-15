@@ -5,7 +5,6 @@ Client::Client(int fd)
       _isAuthenticated(false),
       _isRegistered(false),
       _hasNickname(false),
-      _isOperator(false),
       _welcomeMessageDelivered(false),
       _nickName(""),
       _userName(""),
@@ -17,15 +16,11 @@ bool Client::isAuthenticated(void) const { return (_isAuthenticated); }
 
 bool Client::isRegistered(void) const { return (_isRegistered); }
 
-bool Client::isOperator(void) const { return (_isOperator); }
-
 bool Client::hasNickname(void) const { return (_hasNickname); }
 
 void Client::setRegistration(bool isRegistered) { _isRegistered = isRegistered; }
 
 void Client::setAuthentication(bool isAuthenticated) { _isAuthenticated = isAuthenticated; }
-
-void Client::setOperator(bool isOperator) { _isOperator = isOperator; }
 
 void Client::setHasNickname(bool hasNickname) { _hasNickname = hasNickname; }
 

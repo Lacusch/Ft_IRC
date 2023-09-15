@@ -1,8 +1,8 @@
 #pragma once
 
+#include <limits>
 #include <map>
 #include <string>
-#include <limits>
 
 #include "Client.hpp"
 #include "Utils.hpp"
@@ -17,7 +17,8 @@ class Channel {
     unsigned int _limit;
     bool _inviteOnly;
     std::map<int, Client *> _members;
-    std::map<std::string, std::vector<std::string> > _ops; // channel name is key and list of ops is value
+    std::map<std::string, std::vector<std::string> >
+        _ops;  // channel name is key and list of ops is value
     State _topicMode;
     State _passwordMode;
     State _userLimitMode;
@@ -31,7 +32,8 @@ class Channel {
     bool kick(Client *client, int fd);    // kick a client from the channel
     bool invite(Client *client, int fd);  // invite a client to the channel
     bool leave(Client *client, int fd);   // leave the channel specified
-    bool modifyOpsPrivileges(const std::string &channel_name, const std::string &nickname, char option);
+    bool modifyOpsPrivileges(const std::string &channel_name, const std::string &nickname,
+                             char option);
 
     // Setters
     bool setTopic(const std::string &topic);        // set the chann`l topic
@@ -45,16 +47,17 @@ class Channel {
     void setUserLimitMode(State mode);
 
     // Getters
-    const std::string &getName() const;      // get the channel name
-    const std::string &getTopic() const;     // get the channel topic
-    const std::string &getPassword() const;  // get the channel password
-    unsigned int getLimit() const;           // get the channel limit
-    bool isInviteOnly() const;               // check if the channel is invite only
-    bool getPasswordMode() const;            // check if the channel requires a password
-    void getMembers();                       // get the members of a channel
-    unsigned int getChannelSize() const; // get the number of members
-    std::map<int, Client *> getMembersList(void); // get the members of a channel
-    std::map<std::string, std::vector<std::string> > getOpsList(void) const; // get the ops of a channel
+    const std::string &getName() const;            // get the channel name
+    const std::string &getTopic() const;           // get the channel topic
+    const std::string &getPassword() const;        // get the channel password
+    unsigned int getLimit() const;                 // get the channel limit
+    bool isInviteOnly() const;                     // check if the channel is invite only
+    bool getPasswordMode() const;                  // check if the channel requires a password
+    void getMembers();                             // get the members of a channel
+    unsigned int getChannelSize() const;           // get the number of members
+    std::map<int, Client *> getMembersList(void);  // get the members of a channel
+    std::map<std::string, std::vector<std::string> > getOpsList(
+        void) const;  // get the ops of a channel
 
     // Utils
     bool isMember(Client *client, int fd) const;  // check if a client is a member of the channel

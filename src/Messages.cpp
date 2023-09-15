@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "../incl/Responses.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Shared.hpp"
@@ -110,39 +112,64 @@ int Server::handleChannelMessage(int fd, Request req) {
     return (0);
 }
 
+int Server::broadcastNewUser(int fd, Request req, Channel *channel) {
+    std::map<int, Client *> members = channel->getMembersList();
+    std::map<int, Client *>::iterator it;
+    for (it = members.begin(); it != members.end(); ++it) {
+        Client *idx_member = it->second;
+        if (idx_member->getFd() == fd) continue;
+        req.setReceiverFd(idx_member->getFd());
+        sendMessage(fd, JOIN_CHANNEL, req);
+    };
+    return (0);
+}
+
+int Server::sendRegisteredUsers(int fd, Request req, Channel *channel) {
+    std::map<int, Client *> members = channel->getMembersList();
+    std::map<int, Client *>::iterator it;
+    for (it = members.begin(); it != members.end(); ++it) {
+        Client *idx_member = it->second;
+        std::string msg = ":" + this->getName() + " 353 " + idx_member->getNickName() + " = " +
+                          req.getParams()[0] + " :" + idx_member->getNickName() + "\r\n";
+        Utils::print(G, msg);
+        send(fd, msg.c_str(), msg.size(), 0);
+    };
+    if (members.size() > 1) {
+        std::string end_list = ":" + this->getName() + " 366 " + _clients[fd]->getNickName() +
+                               " #" + channel->getName() + " :End of NAMES list\r\n";
+        Utils::print(G, end_list);
+        send(fd, end_list.c_str(), end_list.size(), 0);
+    }
+    return (0);
+}
+
 int Server::handleJoinChannel(int fd, Request req) {
     if (req.getParams().size() == 0) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (req.getParams().size() > 2) return (sendMessage(fd, ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[0];
     std::string channel_password = "";
-
     if (req.getParams().size() == 2) channel_password = req.getParams()[1];
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
     channel_name = channel_name.substr(1);
-    std::string password = "";
     if (!channelExists(channel_name)) {
-        Channel *general = new Channel(channel_name, password);
+        Channel *general = new Channel(channel_name, channel_password);
         _channels[channel_name] = general;
     }
     Channel *channel = _channels[channel_name];
-    // check if user is already in channel
     channel->join(_clients[fd], fd);
     sendMessage(fd, JOIN_CHANNEL, req);
-
-    std::string response_msg = ":mr.server.com 353 a = #test :a\r\n";
-    send(fd, response_msg.c_str(), response_msg.size(), 0);
-    response_msg = ":mr.server.com 353 b = #test :b\r\n";
-    send(fd, response_msg.c_str(), response_msg.size(), 0);
-    response_msg = ":mr.server.com 366 a #test :End of NAMES list\r\n";
-    send(fd, response_msg.c_str(), response_msg.size(), 0);
-
-    response_msg = ":mr.server.com MODE #test +o a\r\n";
-    Utils::print(G, response_msg);
-    send(fd, response_msg.c_str(), response_msg.size(), 0);
+    broadcastNewUser(fd, req, channel);
+    sendRegisteredUsers(fd, req, channel);
     return (0);
 }
 
 int Server::handleMode(int fd, Request req) {
+    std::vector<std::string> params = req.getParams();
+    if (params.size() == 1) {
+        std::string channel_name = params[0].substr(1);
+        Channel *channel = _channels[channel_name];
+        (void)channel;
+    }
     if (req.getParams().size() == 1) {
         std::string response_msg = ":mr.server.com 324 a #test +t\r\n";
         return (send(fd, response_msg.c_str(), response_msg.size(), 0));

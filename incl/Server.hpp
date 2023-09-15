@@ -56,6 +56,10 @@ class Server {
     int handleWho(int fd, Request req);
     int handleMode(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
+
+    int broadcastNewUser(int fd, Request req, Channel *channel);
+    int sendRegisteredUsers(int fd, Request req, Channel *channel);
+
     Res handleKeyMode(Request req, Channel *ch);
     Res handleUserLimitMode(Request req, Channel *ch);
     Res handleInviteOnlyMode(Request req, Channel *ch);

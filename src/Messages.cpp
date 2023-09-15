@@ -145,12 +145,11 @@ Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
 
     if (mode[0] == '+') {
         if (Channel::userIsChannelOp(target, ch)) return (ERR_USERSDONTMATCH);
-        if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '+')) return (ERR_USERNOTINCHANNEL);
+        if (!ch->modifyOpsPrivileges(target, '+')) return (ERR_USERNOTINCHANNEL);
     }
     else if (mode[0] == '-') {
-        if (!ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '-')) return (ERR_USERNOTINCHANNEL);
+        if (!ch->modifyOpsPrivileges(target, '-')) return (ERR_USERNOTINCHANNEL);
     }
-    else { return (ERR_UNKNOWNMODE); }
 
     return (RPL_CHANNELMODEIS);
 }
@@ -166,7 +165,6 @@ Res Server::handleTopicMode(Request req, Channel *ch) {
     else if (mode[0] == '-') {
         ch->setTopicMode(on);
     }
-    else { return (ERR_UNKNOWNMODE); }
 
     return (RPL_CHANNELMODEIS);
 }
@@ -181,7 +179,6 @@ Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
     else if (mode[0] == '-') {
         ch->setInviteOnlyMode(off);
     }
-    else { return (ERR_UNKNOWNMODE); }
 
     return (RPL_CHANNELMODEIS);
 }
@@ -197,14 +194,12 @@ Res Server::handleUserLimitMode(Request req, Channel *ch) {
                 return (NOT_ENOUGH_PARAMS);
             }
         }
-        else { return (NOT_ENOUGH_PARAMS); }
     }
     else {
         if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
         if (mode[0] == '-') {
             ch->setUserLimitMode(off);
         }
-        else { return (NOT_ENOUGH_PARAMS); }
     }
     return (RPL_CHANNELMODEIS);
 }
@@ -216,14 +211,12 @@ Res Server::handleKeyMode(Request req, Channel *ch) {
             ch->setPasswordMode(on);
             ch->setPassword(req.getParams()[2]);
         }
-        else { return (NOT_ENOUGH_PARAMS); }
     }
     else {
         if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
         if (mode[0] == '-') {
             ch->setPasswordMode(off);
         }
-        else { return (NOT_ENOUGH_PARAMS); }
     }
     return (RPL_CHANNELMODEIS);
 }
@@ -324,10 +317,8 @@ int Server::handleKick(int fd, Request req) {
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
 
     int targetFd = target->getFd();
+
     if (!ch->kick(target, targetFd)) return (sendMessage(fd, ERR_USERNOTINCHANNEL, req));
-    if (Channel::userIsChannelOp(target, ch)) {
-        ch->modifyOpsPrivileges(ch->getName(), target->getNickName(), '-');
-    }
 
     return (sendMessage(fd, RPL_KICKED, req));
 }
@@ -363,10 +354,10 @@ int Server::handleInvite(int fd, Request req) {
     int targetFd = target->getFd();
     if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
 
-    if (ch->getLimit() == ch->getChannelSize())
+    if (ch->getChannelSize() >= ch->getLimit())
         return (sendMessage(fd, ERR_CHANNELISFULL, req));
 
-    return sendMessage(fd, RPL_INVITING, req);
+    return (sendMessage(fd, RPL_INVITING, req));
 }
 
 int Server::handleTopic(int fd, Request req) {

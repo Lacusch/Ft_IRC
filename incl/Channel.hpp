@@ -31,7 +31,7 @@ class Channel {
     bool kick(Client *client, int fd);                                               // kick a client from the channel
     bool invite(Client *client, int fd);                                             // invite a client to the channel
     bool leave(Client *client, int fd);                                              // leave the channel specified
-    bool modifyOpsPrivileges(const std::string &channel_name, const std::string &nickname, char option);
+    bool modifyOpsPrivileges(Client *target, char option);
 
     // Setters
     bool setTopic(const std::string &topic);                                         // set the chann`l topic
@@ -51,14 +51,15 @@ class Channel {
     bool isInviteOnly() const;                                                       // check if the channel is invite only
     bool getPasswordMode() const;                                                    // check if the channel requires a password
     bool getTopicMode() const;                                                       // check if the channel topic can be changed
-    void printMembers();                                                             // get the members of a channel
     unsigned int getLimit() const;                                                   // get the channel limit
     unsigned int getChannelSize() const;                                             // get the number of members
-    std::map<int, Client *> getMembersList(void);                                    // get the members of a channel
-    std::vector<std::string> getOpsList(void);                                       // get the ops of a channel
+    std::map<int, Client *> getMembersList(void) const;                              // get the members of a channel
+    std::vector<std::string> getOpsList(void) const;                                 // get the ops of a channel
 
     // Utils
     bool isMember(Client *client, int fd) const;                                     // check if a client is a member of the channel
     bool isTopicValid(const std::string &topic);                                     // check if the topic is valid
     static bool userIsChannelOp(Client *client, Channel *chName);
+    void printMembers();                                                             // get the members of a channel (testing purpose)
+    void printOperators();                                                           // get the ops of a channel (testing purpose)
 };

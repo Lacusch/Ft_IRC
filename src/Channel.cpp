@@ -14,12 +14,14 @@ Channel::Channel(std::string& name, std::string& password)
 
 Channel::~Channel() {}
 
+
+
 // ------------------------------------------------------------
 //  Channel Methods 
 // ------------------------------------------------------------
 bool Channel::join(Client* client, int fd) {
-    if (isMember(client, fd)) return false;       // Client is already in the channel
-    // if (_members.size() >= _limit) return false;  // Channel is full (Check not required here, should be done by the server)
+    if (isMember(client, fd)) return (false);       // Client is already in the channel
+    // if (_members.size() >= _limit) return (false);  // Channel is full (Check not required here, should be done by the server)
 
     _members[fd] = client;  // Add the client to the list of members
 	Utils::print(P, "Current size of channel: " + this->getName() + " -> ", 0);
@@ -28,47 +30,45 @@ bool Channel::join(Client* client, int fd) {
 		_ops[this->getName()].push_back(client->getNickName());
 	}
 
-    // For Testing purpose
-	Utils::print(Y, "Operators of channel: ");
-	for (std::map<std::string, std::vector<std::string> >::iterator it = this->_ops.begin(); it != this->_ops.end(); ++it) {
-		std::vector<std::string> savedOperators = it->second;
-		while (savedOperators.size() > 0) {
-			Utils::print(Y, "|" + it->first + "|" + " operator's name: " + "|" + savedOperators.back() + "|");
-			savedOperators.pop_back();
-		}
-	}
-	std::cout << "Client " << fd << " " << _members[fd]->getNickName() << " joined the channel." << std::endl;
+    printOperators();     // For Testing purpose
 
-	return true;
+	return (true);
 }
 
 bool Channel::kick(Client* client, int fd) {
-    if (!isMember(client, fd)) return false;  // Client is not in the channel
+    if (!isMember(client, fd)) return (false);  // Client is not in the channel
+    if (userIsChannelOp(client, this)) {
+        this->modifyOpsPrivileges(client, '-');
+    }
     _members.erase(fd);                       // Eject the client
-    return true;
+    return (true);
 }
 
 bool Channel::invite(Client* client, int fd) {
-    if (isMember(client, fd)) return false;  // Client is already in the channel
-    return true;
+    if (isMember(client, fd)) return (false);  // Client is already in the channel
+    return (true);
 }
 
 bool Channel::leave(Client* client, int fd) {
-    if (!isMember(client, fd)) return false;  // Client is not in the channel
+    if (!isMember(client, fd)) return (false);  // Client is not in the channel
+    if (userIsChannelOp(client, this)) {
+        this->modifyOpsPrivileges(client, '-');
+    }
     _members.erase(fd);
-    return true;
+    return (true);
 }
 
-bool Channel::modifyOpsPrivileges(const std::string& channel_name, const std::string& nickname, char option) {
+bool Channel::modifyOpsPrivileges(Client *target, char option) {
+	if (!isMember(target, target->getFd())) return (false);
+
 	if (option == '+') {
-		_ops[channel_name].push_back(nickname);
+		_ops[this->getName()].push_back(target->getNickName());
 	}
 	else if (option == '-') {
-		_ops[channel_name].erase(std::remove(_ops[channel_name].begin(), _ops[channel_name].end(), nickname), _ops[channel_name].end());
+		_ops[this->getName()].erase(std::remove(_ops[this->getName()].begin(), _ops[this->getName()].end(), target->getNickName()), _ops[this->getName()].end());
 	}
-	return true;
+	return (true);
 }
-
 
 
 
@@ -79,25 +79,24 @@ bool Channel::modifyOpsPrivileges(const std::string& channel_name, const std::st
 bool Channel::setTopic(const std::string& topic) {
     if (isTopicValid(topic)) {
         _topic = topic;
-        return true;
+        return (true);
     }
-    return false;
+    return (false);
 }
 
 bool Channel::setPassword(const std::string& password) {
-    if (_passwordMode == off) return false;
+    if (_passwordMode == off) return (false);
     _password = password;
-    return true;
+    return (true);
 }
 
 bool Channel::setUserLimit(unsigned int limit) {
-    if (_userLimitMode == off) return false;
+    if (_userLimitMode == off) return (false);
 
-    if (limit < 2 || limit > 200) return false;
+    if (limit < 2 || limit > 200) return (false);
     _limit = limit;
-    return true;
+    return (true);
 }
-
 
 
 
@@ -135,22 +134,15 @@ bool Channel::getPasswordMode() const { return (_passwordMode); }
 
 bool Channel::getTopicMode() const { return (_topicMode); }
 
-std::map<int, Client*> Channel::getMembersList(void) { return (_members); }
+std::map<int, Client*> Channel::getMembersList(void) const { return (_members); }
 
-void Channel::printMembers() {
-    std::map<int, Client*>::iterator it;
-    for (it = _members.begin(); it != _members.end(); ++it) {
-        Client* client = it->second;
-        std::cout << it->second << "---------->" << client->getNickName() << std::endl;
-    }
-}
+std::vector<std::string> Channel::getOpsList(void) const {
 
-std::vector<std::string> Channel::getOpsList(void) {
-
+    std::map<std::string, std::vector<std::string> > ops = _ops;
     std::map<std::string, std::vector<std::string> >::iterator it;
     std::vector<std::string> savedOperators;
 
-    for (it = _ops.begin(); it != _ops.end(); ++it) {
+    for (it = ops.begin(); it != ops.end(); ++it) {
         if (it->first == this->getName()) {
             savedOperators = it->second;
             break;
@@ -161,7 +153,6 @@ std::vector<std::string> Channel::getOpsList(void) {
 
 
 
-
 // ----------------------------------------------------------
 //  Utils
 // ----------------------------------------------------------
@@ -169,24 +160,24 @@ std::vector<std::string> Channel::getOpsList(void) {
 bool Channel::isMember(Client* client, int fd) const {
 
     (void) fd;
-    std::map<int, Client*>memberList = _members;
+    std::map<int, Client*> memberList = _members;
 
     std::map<int, Client*>::iterator it;
 
     for (it = memberList.begin(); it != memberList.end(); ++it) {
         if (it->second == client) {
-            return true;
+            return (true);
         }
     }
-    return false;
+    return (false);
 }
 
 bool Channel::isTopicValid(const std::string& topic) {
     // check if topic has no line breaks
-    if (topic.find('\n') != std::string::npos) return false;
-    if (topic.empty()) return false;
+    if (topic.find('\n') != std::string::npos) return (false);
+    if (topic.empty()) return (false);
 
-    return true;
+    return (true);
 }
 
 bool Channel::userIsChannelOp(Client *client, Channel *chName) {
@@ -195,8 +186,27 @@ bool Channel::userIsChannelOp(Client *client, Channel *chName) {
     std::vector<std::string>::iterator it;
 
     for (it = chOps.begin(); it != chOps.end(); ++it) {
-        if (*it == client->getNickName()) return true;
+        if (*it == client->getNickName()) return (true);
     }
 
-    return false;
+    return (false);
+}
+
+void Channel::printMembers() {
+    std::map<int, Client*>::iterator it;
+    for (it = _members.begin(); it != _members.end(); ++it) {
+        Client* client = it->second;
+        std::cout << it->second << "---------->" << client->getNickName() << std::endl;
+    }
+}
+
+void Channel::printOperators() {
+	Utils::print(B, "Operators of channel: ");
+	for (std::map<std::string, std::vector<std::string> >::iterator it = this->_ops.begin(); it != this->_ops.end(); ++it) {
+		std::vector<std::string> savedOperators = it->second;
+		while (savedOperators.size() > 0) {
+			Utils::print(Y, "|" + it->first + "|" + " operator's name: " + "|" + savedOperators.back() + "|");
+			savedOperators.pop_back();
+		}
+	}
 }

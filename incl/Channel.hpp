@@ -18,7 +18,6 @@ class Channel {
     bool _inviteOnly;
     State _topicMode;                                                                // off (only operators can change topic), on (everyone can change topic)
     State _passwordMode;
-    State _userLimitMode;
     std::map<int, Client *> _members;
     std::map<std::string, std::vector<std::string> > _ops;                           // channel name is key and list of ops is value 
 
@@ -42,7 +41,6 @@ class Channel {
     void setTopicMode(State mode);
     void setPasswordMode(State mode);
     void setInviteOnlyMode(State mode);
-    void setUserLimitMode(State mode);
 
     // Getters
     const std::string &getName() const;                                              // get the channel name
@@ -60,6 +58,6 @@ class Channel {
     bool isMember(Client *client, int fd) const;                                     // check if a client is a member of the channel
     bool isTopicValid(const std::string &topic);                                     // check if the topic is valid
     static bool userIsChannelOp(Client *client, Channel *chName);
-    void printMembers();                                                             // get the members of a channel (testing purpose)
-    void printOperators();                                                           // get the ops of a channel (testing purpose)
+    void printMembers();                                                             // get the members of a channel (Testing Purpose)
+    void printOperators();                                                           // get the ops of a channel (Testing Purpose)
 };

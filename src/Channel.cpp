@@ -7,8 +7,7 @@ Channel::Channel(std::string& name, std::string& password)
       _limit(200),
       _inviteOnly(off),
       _topicMode(off),
-      _passwordMode(on),
-      _userLimitMode(off) {
+      _passwordMode(on) {
     Utils::print(B, "Men this -> " + this->_name + " is not easy");
 }
 
@@ -24,15 +23,17 @@ bool Channel::join(Client* client, int fd) {
     // if (_members.size() >= _limit) return (false);  // Channel is full (Check not required here, should be done by the server)
 
     _members[fd] = client;  // Add the client to the list of members
+
 	Utils::print(P, "Current size of channel: " + this->getName() + " -> ", 0);
 	std::cout << _members.size() << std::endl;
+
     if (_members.size() == 1) {
-		_ops[this->getName()].push_back(client->getNickName());
-	}
+    _ops[this->getName()].push_back(client->getNickName());
+    }
 
     printOperators();     // For Testing purpose
 
-	return (true);
+    return (true);
 }
 
 bool Channel::kick(Client* client, int fd) {
@@ -91,7 +92,6 @@ bool Channel::setPassword(const std::string& password) {
 }
 
 bool Channel::setUserLimit(unsigned int limit) {
-    if (_userLimitMode == off) return (false);
 
     if (limit < 2 || limit > 200) return (false);
     _limit = limit;
@@ -110,7 +110,6 @@ void Channel::setTopicMode(State mode) { _topicMode = mode; }
 
 void Channel::setInviteOnlyMode(State mode) { _inviteOnly = mode; }
 
-void Channel::setUserLimitMode(State mode) { _userLimitMode = mode; }
 
 
 

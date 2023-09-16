@@ -188,18 +188,19 @@ Res Server::handleUserLimitMode(Request req, Channel *ch) {
     if (req.getParams().size() == 3) {
         if (mode[0] == '+') {
             if (!Utils::isValidUnsignedInt(req.getParams()[2])) return (NOT_ENOUGH_PARAMS);
-            ch->setUserLimitMode(on);
             unsigned int limit = static_cast<unsigned int>(std::atoi(req.getParams()[2].c_str()));
             if (!ch->setUserLimit(limit)) {
                 return (NOT_ENOUGH_PARAMS);
             }
         }
+        else return (NOT_ENOUGH_PARAMS);
     }
     else {
         if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
         if (mode[0] == '-') {
-            ch->setUserLimitMode(off);
+            ch->setUserLimit(200);
         }
+        else return (NOT_ENOUGH_PARAMS);
     }
     return (RPL_CHANNELMODEIS);
 }
@@ -211,12 +212,14 @@ Res Server::handleKeyMode(Request req, Channel *ch) {
             ch->setPasswordMode(on);
             ch->setPassword(req.getParams()[2]);
         }
+        else return (NOT_ENOUGH_PARAMS);
     }
     else {
         if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
         if (mode[0] == '-') {
             ch->setPasswordMode(off);
         }
+        else return (NOT_ENOUGH_PARAMS);
     }
     return (RPL_CHANNELMODEIS);
 }

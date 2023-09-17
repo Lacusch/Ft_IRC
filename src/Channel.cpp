@@ -24,11 +24,11 @@ bool Channel::join(Client* client, int fd) {
 
     _members[fd] = client;  // Add the client to the list of members
 
-	Utils::print(P, "Current size of channel: " + this->getName() + " -> ", 0);
-	std::cout << _members.size() << std::endl;
+    Utils::print(P, "Current size of channel: " + this->getName() + " -> ", 0);
+    std::cout << _members.size() << std::endl;
 
     if (_members.size() == 1) {
-    _ops[this->getName()].push_back(client->getNickName());
+        _opsList.push_back(client->getNickName());
     }
 
     printOperators();     // For Testing purpose
@@ -38,7 +38,7 @@ bool Channel::join(Client* client, int fd) {
 
 bool Channel::kick(Client* client, int fd) {
     if (!isMember(client, fd)) return (false);  // Client is not in the channel
-    if (userIsChannelOp(client, this)) {
+    if (userIsChannelOp(client)) {
         this->modifyOpsPrivileges(client, '-');
     }
     _members.erase(fd);                       // Eject the client
@@ -52,7 +52,7 @@ bool Channel::invite(Client* client, int fd) {
 
 bool Channel::leave(Client* client, int fd) {
     if (!isMember(client, fd)) return (false);  // Client is not in the channel
-    if (userIsChannelOp(client, this)) {
+    if (userIsChannelOp(client)) {
         this->modifyOpsPrivileges(client, '-');
     }
     _members.erase(fd);
@@ -63,10 +63,10 @@ bool Channel::modifyOpsPrivileges(Client *target, char option) {
 	if (!isMember(target, target->getFd())) return (false);
 
 	if (option == '+') {
-		_ops[this->getName()].push_back(target->getNickName());
+        _opsList.push_back(target->getNickName());
 	}
 	else if (option == '-') {
-		_ops[this->getName()].erase(std::remove(_ops[this->getName()].begin(), _ops[this->getName()].end(), target->getNickName()), _ops[this->getName()].end());
+        _opsList.erase(std::remove(_opsList.begin(), _opsList.end(), target->getNickName()), _opsList.end());
 	}
 	return (true);
 }
@@ -135,22 +135,17 @@ bool Channel::getTopicMode() const { return (_topicMode); }
 
 std::map<int, Client*> Channel::getMembersList(void) const { return (_members); }
 
-std::vector<std::string> Channel::getOpsList(void) const {
+std::vector<std::string> Channel::getOpsList(void) const { return (_opsList); }
 
-    std::map<std::string, std::vector<std::string> > ops = _ops;
-    std::map<std::string, std::vector<std::string> >::iterator it;
-    std::vector<std::string> savedOperators;
+Client *Channel::getClientByNickName(std::map<int, Client *> clients, std::string nickname) const {
 
-    for (it = ops.begin(); it != ops.end(); ++it) {
-        if (it->first == this->getName()) {
-            savedOperators = it->second;
-            break;
-        }
+    std::map<int, Client *>::iterator it = clients.begin();
+    for (; it != clients.end(); ++it) {
+        if (it->second->getNickName() == nickname) return (it->second);
     }
-    return (savedOperators);
+
+    return (NULL);
 }
-
-
 
 // ----------------------------------------------------------
 //  Utils
@@ -164,10 +159,9 @@ bool Channel::isMember(Client* client, int fd) const {
     std::map<int, Client*>::iterator it;
 
     for (it = memberList.begin(); it != memberList.end(); ++it) {
-        if (it->second == client) {
-            return (true);
-        }
+        if (it->second == client) return (true);
     }
+
     return (false);
 }
 
@@ -179,9 +173,9 @@ bool Channel::isTopicValid(const std::string& topic) {
     return (true);
 }
 
-bool Channel::userIsChannelOp(Client *client, Channel *chName) {
+bool Channel::userIsChannelOp(Client *client) {
 
-    std::vector<std::string> chOps = chName->getOpsList();
+    std::vector<std::string> chOps = this->getOpsList();
     std::vector<std::string>::iterator it;
 
     for (it = chOps.begin(); it != chOps.end(); ++it) {
@@ -200,12 +194,10 @@ void Channel::printMembers() {
 }
 
 void Channel::printOperators() {
-	Utils::print(B, "Operators of channel: ");
-	for (std::map<std::string, std::vector<std::string> >::iterator it = this->_ops.begin(); it != this->_ops.end(); ++it) {
-		std::vector<std::string> savedOperators = it->second;
-		while (savedOperators.size() > 0) {
-			Utils::print(Y, "|" + it->first + "|" + " operator's name: " + "|" + savedOperators.back() + "|");
-			savedOperators.pop_back();
-		}
-	}
+    Utils::print(B, "Operators of channel: ");
+
+    for (std::vector<std::string>::iterator it = this->_opsList.begin(); it != this->_opsList.end(); ++it) {
+        Utils::print(Y, "|" + this->getName() + " Operator's name: |" + *it + "|");
+    }
+       
 }

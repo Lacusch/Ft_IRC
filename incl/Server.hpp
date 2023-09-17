@@ -33,6 +33,7 @@ class Server {
     std::string getCreationDate() const;
     std::string getPassword() const;
     int getFdFromNickName(std::string nickname);
+    std::map<int, Client *> getClientsList() const;
 
     int valid_args();
     int start_server();

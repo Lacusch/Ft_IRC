@@ -166,8 +166,13 @@ int Server::handleMode(int fd, Request req) {
     if (params.size() == 1) {
         std::string channel_name = params[0].substr(1);
         Channel *channel = _channels[channel_name];
-        // Get operators
-        (void)channel;
+        std::vector<std::string> OpsList = channel->getOpsList();
+        for (std::vector<std::string>::iterator it = OpsList.begin(); it != OpsList.end(); ++it) {
+            std::string msg =
+                ":" + this->getName() + " MODE " + "#" + channel_name + " +o " + *it + "\r\n";
+            Utils::print(G, msg);
+            send(fd, msg.c_str(), msg.size(), 0);
+        }
     }
     if (req.getParams().size() == 1) {
         std::string response_msg = ":mr.server.com 324 a #test +t\r\n";
@@ -187,21 +192,18 @@ int Server::handleMode(int fd, Request req) {
     Channel *ch = _channels[channel_name];
 
     // Check if the user is a channel operator
-    if (!Channel::userIsChannelOp(_clients[fd], ch))
-        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+    if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
     return (this->handleChannelMode(fd, req, ch));
 }
 
 Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
-
     std::string mode = req.getParams()[1];
     if (req.getParams().size() != 3) return (NOT_ENOUGH_PARAMS);
 
     if (mode[0] == '+') {
         if (ch->userIsChannelOp(target)) return (ERR_USERSDONTMATCH);
         if (!ch->modifyOpsPrivileges(target, '+')) return (ERR_USERNOTINCHANNEL);
-    }
-    else if (mode[0] == '-') {
+    } else if (mode[0] == '-') {
         if (!ch->modifyOpsPrivileges(target, '-')) return (ERR_USERNOTINCHANNEL);
     }
 
@@ -209,15 +211,13 @@ Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
 }
 
 Res Server::handleTopicMode(Request req, Channel *ch) {
-
     std::string mode = req.getParams()[1];
     if (req.getParams().size() != 2) return (NOT_ENOUGH_PARAMS);
 
     if (mode[0] == '+') {
-        ch->setTopicMode(off); // only operators can set topic when it's off
-    }
-    else if (mode[0] == '-') {
-        ch->setTopicMode(on); // all users can set topic when it's on
+        ch->setTopicMode(off);  // only operators can set topic when it's off
+    } else if (mode[0] == '-') {
+        ch->setTopicMode(on);  // all users can set topic when it's on
     }
 
     return (RPL_CHANNELMODEIS);
@@ -225,12 +225,13 @@ Res Server::handleTopicMode(Request req, Channel *ch) {
 
 Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
     std::string mode = req.getParams()[1];
-    if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
+    if (req.getParams().size() != 2) {
+        return (NOT_ENOUGH_PARAMS);
+    }
 
     if (mode[0] == '+') {
         ch->setInviteOnlyMode(on);
-    }
-    else if (mode[0] == '-') {
+    } else if (mode[0] == '-') {
         ch->setInviteOnlyMode(off);
     }
 
@@ -246,15 +247,16 @@ Res Server::handleUserLimitMode(Request req, Channel *ch) {
             if (!ch->setUserLimit(limit)) {
                 return (NOT_ENOUGH_PARAMS);
             }
+        } else
+            return (NOT_ENOUGH_PARAMS);
+    } else {
+        if (req.getParams().size() != 2) {
+            return (NOT_ENOUGH_PARAMS);
         }
-        else return (NOT_ENOUGH_PARAMS);
-    }
-    else {
-        if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
         if (mode[0] == '-') {
             ch->setUserLimit(200);
-        }
-        else return (NOT_ENOUGH_PARAMS);
+        } else
+            return (NOT_ENOUGH_PARAMS);
     }
 
     return (RPL_CHANNELMODEIS);
@@ -266,23 +268,25 @@ Res Server::handleKeyMode(Request req, Channel *ch) {
         if (mode[0] == '+') {
             ch->setPasswordMode(on);
             ch->setPassword(req.getParams()[2]);
+        } else
+            return (NOT_ENOUGH_PARAMS);
+    } else {
+        if (req.getParams().size() != 2) {
+            return (NOT_ENOUGH_PARAMS);
         }
-        else return (NOT_ENOUGH_PARAMS);
-    }
-    else {
-        if (req.getParams().size() != 2) { return (NOT_ENOUGH_PARAMS); }
         if (mode[0] == '-') {
             ch->setPasswordMode(off);
-        }
-        else return (NOT_ENOUGH_PARAMS);
+        } else
+            return (NOT_ENOUGH_PARAMS);
     }
 
     return (RPL_CHANNELMODEIS);
 }
 
 int Server::handleChannelMode(int fd, Request req, Channel *ch) {
-
-    if (req.getParams().size() < 2) { return sendMessage(fd, NOT_ENOUGH_PARAMS, req); }
+    if (req.getParams().size() < 2) {
+        return sendMessage(fd, NOT_ENOUGH_PARAMS, req);
+    }
     std::string mode = req.getParams()[1];
     if (mode.length() != 2) return (sendMessage(fd, ERR_UNKNOWNMODE, req));
 
@@ -296,9 +300,10 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
         case 'O':
             if (req.getParams()[2].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             target = ch->getClientByNickName(this->getClientsList(), req.getParams()[2]);
-            if (target == NULL && req.getParams().size() == 3) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+            if (target == NULL && req.getParams().size() == 3)
+                return (sendMessage(fd, ERR_NOSUCHNICK, req));
             response = handleOperatorMode(target, req, ch);
-            break ;
+            break;
         case 'K':
             response = handleKeyMode(req, ch);
             break;
@@ -319,7 +324,6 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
     return (sendMessage(fd, response, req));
 }
 
-
 int Server::handleKick(int fd, Request req) {
     if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[0];
@@ -331,7 +335,7 @@ int Server::handleKick(int fd, Request req) {
 
     Channel *ch = _channels[channel_name];
 
-    if (!ch->isMember(_clients[fd],fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+    if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
     if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
 
@@ -346,8 +350,6 @@ int Server::handleKick(int fd, Request req) {
     return (sendMessage(fd, RPL_KICKED, req));
 }
 
-
-
 int Server::handleInvite(int fd, Request req) {
     if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[1];
@@ -359,7 +361,7 @@ int Server::handleInvite(int fd, Request req) {
 
     Channel *ch = _channels[channel_name];
 
-    if (!ch->isMember(_clients[fd],fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+    if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
     if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
 
@@ -375,7 +377,8 @@ int Server::handleInvite(int fd, Request req) {
 }
 
 int Server::handleTopic(int fd, Request req) {
-    if (req.getParams().size() == 0 || req.getParams().size() > 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    if (req.getParams().size() == 0 || req.getParams().size() > 2)
+        return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[0];
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 
@@ -385,11 +388,12 @@ int Server::handleTopic(int fd, Request req) {
 
     Channel *ch = _channels[channel_name];
 
-    if (!ch->isMember(_clients[fd],fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+    if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
     if (req.getParams().size() == 1) {
         req.setParams(ch->getTopic());
-        return (ch->getTopic().empty()) ?  (sendMessage(fd, RPL_NOTOPIC, req)) : (sendMessage(fd, RPL_TOPIC, req));
+        return (ch->getTopic().empty()) ? (sendMessage(fd, RPL_NOTOPIC, req))
+                                        : (sendMessage(fd, RPL_TOPIC, req));
     }
 
     if (ch->getTopicMode() == off) {

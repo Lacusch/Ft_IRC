@@ -130,15 +130,35 @@ bool Utils::isValidUnsignedInt(const std::string& str) {
     return (true);
 }
 
+bool Utils::isMultiParamValid(std::string str) {
+    if (str.empty()) return (false);
+    if (str[0] == ',' || str[str.length() - 1] == ',') return (false);
+    for (size_t i = 0; i < str.length(); ++i) {
+        if ((str[i] == ',' && str[++i] == ',')) return (false);
+        if (str[i] == ' ') return (false);
+    }
+
+    return true;
+}
+
 bool Utils::parse_join_msg(Request &req) {
-    // given a vector of strings, such as "Ch1,Ch2,Ch3" "key1,key2" in this format, create a pair of these strings in a vector such that it gives this result in a vector of pairs: {{"Ch1", "key1"}, {"Ch2", "key2"}, {"Ch3", ""}} in C++
 
     if (req.getParams().size() < 1) return (false);
 
-    std::vector<std::string> channels = splitString(req.getParams()[0], ',');
-    std::vector<std::string> keys = splitString(req.getParams()[1], ',');
+    std::vector<std::string> channels;
+    std::vector<std::string> keys;
 
+    std::string first = req.getParams()[0];
+    if (!isMultiParamValid(first)) return (false);
+    channels = splitString(first, ',');
     if (channels.size() < 1) return (false);
+
+    if (req.getParams().size() > 1) {
+        std::string second = req.getParams()[1];
+        if (!isMultiParamValid(second)) return (false);
+        keys = splitString(second, ',');
+    }
+
     req.setJoinParams(channels, keys);
 
     return (true);

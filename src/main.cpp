@@ -55,8 +55,8 @@
 // void testRequest() {
 //     Request req = Request();
 //     req.setCommand("join");
-//     req.setParams("#ch1");
-//     req.setParams("a");
+//     req.setParams("#ch1,#ch2,#ch3,ch4");
+//     req.setParams("a,b,c");
 
 //     Utils::parse_join_msg(req);
 //     std::vector<std::pair<std::string, std::string> > join_params = req.getJoinParams();
@@ -69,7 +69,7 @@
 int main(int argc, char **argv) {
 
     // testRequest();
-    return 0;
+    // return 0;
     if (argc != 3) return (Utils::print_error(INVALID_ARGC));
     Server server(SERVER_NAME, SERVER_VERSION, argv[1], argv[2]);
     if (server.valid_args() || server.start_server()) return (1);

@@ -22,6 +22,8 @@ std::string Server::getVersion() const { return (this->_version); }
 
 std::string Server::getPassword() const { return (this->_password); }
 
+std::map<int, Client *> Server::getClientsList() const { return (_clients); }
+
 std::string Server::getCreationDate() const {
     std::string datetime = std::ctime(&_creation_date);
     return (datetime);
@@ -159,9 +161,15 @@ int Server::clientMessage(int i) {
             return (this->handleWho(fd, req));
         else if (req.getCommand() == "JOIN")
             return (this->handleJoinChannel(fd, req));
-        else if (req.getCommand() == "MODE") {
+        else if (req.getCommand() == "MODE")
             return (this->handleMode(fd, req));
-        } else
+        else if (req.getCommand() == "KICK")
+            return (this->handleKick(fd, req));
+        else if (req.getCommand() == "INVITE")
+            return (this->handleInvite(fd, req));
+        else if (req.getCommand() == "TOPIC")
+            return (this->handleTopic(fd, req));
+        else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }
     return (true);

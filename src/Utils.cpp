@@ -58,7 +58,8 @@ Request Utils::parse_msg(int fd, std::string msg) {
         tokens.push_back(token);
     }
 
-    if (tokens.size() == 0) return clientRequest;
+    if (tokens.size() == 0) return (clientRequest);
+
     if (tokens[0][0] == ':') {
         prefix = tokens[0].substr(1, tokens[0].size() - 1);
         command = tokens[1];
@@ -92,7 +93,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
         }
     }
     clientRequest.setTrailing(trailing);
-    return clientRequest;
+    return (clientRequest);
 }
 
 std::string Utils::to_upper(std::string str) {
@@ -104,14 +105,14 @@ std::string Utils::to_upper(std::string str) {
 
 bool Utils::isValidUnsignedInt(const std::string& str) {
     if (str.empty()) {
-        return false;
+        return (false);
     }
 
     for (size_t i = 0; i < str.length(); ++i) {
         if (!std::isdigit(str[i])) {
-            return false;
+            return (false);
         }
     }
 
-    return true;
+    return (true);
 }

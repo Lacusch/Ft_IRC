@@ -33,6 +33,7 @@ class Server {
     std::string getCreationDate() const;
     std::string getPassword() const;
     int getFdFromNickName(std::string nickname);
+    std::map<int, Client *> getClientsList() const;
 
     int valid_args();
     int start_server();
@@ -55,6 +56,9 @@ class Server {
     int handlePing(int fd, Request req);
     int handleWho(int fd, Request req);
     int handleMode(int fd, Request req);
+    int handleKick(int fd, Request req);
+    int handleInvite(int fd, Request req);
+    int handleTopic(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
 
     int broadcastNewUser(int fd, Request req, Channel *channel);

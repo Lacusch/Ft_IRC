@@ -36,5 +36,5 @@ enum Res {
     RPL_INVITING,
     RPL_NOTOPIC,
     RPL_TOPIC,
-
+    ERR_BADCHANNELKEY
 };

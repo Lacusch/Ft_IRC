@@ -61,7 +61,7 @@ class Server {
     int handleTopic(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
 
-    int broadcastNewUser(int fd, Request req, Channel *channel);
+    int broadcastChannel(int fd, Request req, Channel *channel, Res res);
     int sendRegisteredUsers(int fd, Request req, Channel *channel);
 
     Res handleKeyMode(Request req, Channel *ch);

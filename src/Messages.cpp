@@ -1,3 +1,5 @@
+#include <string>
+
 #include "../incl/Responses.hpp"
 #include "../incl/Server.hpp"
 #include "../incl/Shared.hpp"
@@ -110,14 +112,13 @@ int Server::handleChannelMessage(int fd, Request req) {
     return (0);
 }
 
-int Server::broadcastNewUser(int fd, Request req, Channel *channel) {
+int Server::broadcastChannel(int fd, Request req, Channel *channel, Res res) {
     std::map<int, Client *> members = channel->getMembersList();
     std::map<int, Client *>::iterator it;
     for (it = members.begin(); it != members.end(); ++it) {
         Client *idx_member = it->second;
-        if (idx_member->getFd() == fd) continue;
         req.setReceiverFd(idx_member->getFd());
-        sendMessage(fd, JOIN_CHANNEL, req);
+        sendMessage(fd, res, req);
     };
     return (0);
 }
@@ -153,11 +154,11 @@ int Server::handleJoinChannel(int fd, Request req) {
         Channel *general = new Channel(channel_name, channel_password);
         _channels[channel_name] = general;
     }
-    Channel *channel = _channels[channel_name];
-    channel->join(_clients[fd], fd);
-    sendMessage(fd, JOIN_CHANNEL, req);
-    broadcastNewUser(fd, req, channel);
-    sendRegisteredUsers(fd, req, channel);
+    Channel *ch = _channels[channel_name];
+    if (ch->getPassword() != channel_password) return (sendMessage(fd, ERR_BADCHANNELKEY, req));
+    ch->join(_clients[fd], fd);
+    broadcastChannel(fd, req, ch, JOIN_CHANNEL);
+    sendRegisteredUsers(fd, req, ch);
     return (0);
 }
 
@@ -173,11 +174,16 @@ int Server::handleMode(int fd, Request req) {
             Utils::print(G, msg);
             send(fd, msg.c_str(), msg.size(), 0);
         }
+        std::string topic = channel->getTopic();
+        (void)topic;
+        bool topiChangeForOperators = !channel->getTopicMode();
+        std::string msg_topic = ":" + this->getName() + " MODE " + "#" + channel_name + " " +
+                                (topiChangeForOperators ? "+t" : "-t") + "\r\n";
+        Utils::print(G, msg_topic);
+        send(fd, msg_topic.c_str(), msg_topic.size(), 0);
+        return (0);
     }
-    if (req.getParams().size() == 1) {
-        std::string response_msg = ":mr.server.com 324 a #test +t\r\n";
-        return (send(fd, response_msg.c_str(), response_msg.size(), 0));
-    } else if (req.getParams().size() == 2) {
+    if (req.getParams().size() == 2) {
         if (req.getParams()[1] == "b") return (0);
     }
     if (req.getParams().size() < 2 || req.getParams().size() > 3)
@@ -254,7 +260,7 @@ Res Server::handleUserLimitMode(Request req, Channel *ch) {
             return (NOT_ENOUGH_PARAMS);
         }
         if (mode[0] == '-') {
-            ch->setUserLimit(200);
+            ch->setUserLimit(CHANNEL_USER_LIMIT);
         } else
             return (NOT_ENOUGH_PARAMS);
     }
@@ -320,8 +326,7 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
             response = ERR_UNKNOWNMODE;
             break;
     }
-
-    return (sendMessage(fd, response, req));
+    return (broadcastChannel(fd, req, ch, response));
 }
 
 int Server::handleKick(int fd, Request req) {
@@ -345,9 +350,10 @@ int Server::handleKick(int fd, Request req) {
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
 
     int targetFd = target->getFd();
+    broadcastChannel(fd, req, ch, RPL_KICKED);
     if (!ch->kick(target, targetFd)) return (sendMessage(fd, ERR_USERNOTINCHANNEL, req));
 
-    return (sendMessage(fd, RPL_KICKED, req));
+    return (0);
 }
 
 int Server::handleInvite(int fd, Request req) {
@@ -401,5 +407,5 @@ int Server::handleTopic(int fd, Request req) {
     }
     ch->setTopic(req.getParams()[1]);
 
-    return (sendMessage(fd, RPL_TOPIC, req));
+    return (broadcastChannel(fd, req, ch, RPL_TOPIC));
 }

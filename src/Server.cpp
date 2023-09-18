@@ -22,7 +22,7 @@ std::string Server::getVersion() const { return (this->_version); }
 
 std::string Server::getPassword() const { return (this->_password); }
 
-std::map<int, Client *> Server::getClientsList() const { return (_clients); }
+std::map<int, Client*> Server::getClientsList() const { return (_clients); }
 
 std::string Server::getCreationDate() const {
     std::string datetime = std::ctime(&_creation_date);

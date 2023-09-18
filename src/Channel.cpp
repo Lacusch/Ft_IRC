@@ -7,7 +7,9 @@ Channel::Channel(std::string& name, std::string& password)
       _limit(CHANNEL_USER_LIMIT),
       _inviteOnly(off),
       _topicMode(off),
-      _passwordMode(on) {}
+      _passwordMode(on) {
+    if (!password.empty()) _passwordMode = on;
+}
 
 Channel::~Channel() {}
 

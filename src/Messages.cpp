@@ -155,7 +155,9 @@ int Server::handleJoinChannel(int fd, Request req) {
         _channels[channel_name] = general;
     }
     Channel *ch = _channels[channel_name];
-    if (ch->getPassword() != channel_password) return (sendMessage(fd, ERR_BADCHANNELKEY, req));
+    bool requiresPassword = ch->getPasswordMode();
+    if (ch->getPassword() != channel_password && requiresPassword)
+        return (sendMessage(fd, ERR_BADCHANNELKEY, req));
     ch->join(_clients[fd], fd);
     broadcastChannel(fd, req, ch, JOIN_CHANNEL);
     sendRegisteredUsers(fd, req, ch);

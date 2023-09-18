@@ -12,4 +12,7 @@ class Utils {
     static Request parse_msg(int fd, std::string msg);
     static std::string to_upper(std::string str);
     static bool isValidUnsignedInt(const std::string& str);
+    static bool parse_join_msg(Request &req);
+    static std::vector<std::string> splitString(std::string str, char delimiter);
+    static std::string removeSpace(std::string str);
 };

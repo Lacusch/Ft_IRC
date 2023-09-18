@@ -34,10 +34,28 @@ std::string Utils::irc_trim(std::string msg) {
     return (substring);
 }
 
+std::vector<std::string> Utils::splitString(std::string str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream stream(str);
+
+    while (std::getline(stream, token, delimiter)) {
+        if (token.size() == 0) continue;
+        tokens.push_back(token);
+    }
+    return (tokens);
+}
+
+std::string Utils::removeSpace(std::string str) {
+    std::string result = "";
+    for (size_t i = 0; i < str.length(); i++) {
+        if (str[i] != ' ') result += str[i];
+    }
+    return (result);
+}
+
 Request Utils::parse_msg(int fd, std::string msg) {
     std::vector<std::string> tokens;
-    std::istringstream stream(msg);
-    std::string token;
 
     Request clientRequest = Request();
     std::string prefix = "";
@@ -53,10 +71,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
     clientRequest.setCommand(command);
     clientRequest.setTrailing(trailing);
 
-    while (std::getline(stream, token, ' ')) {
-        if (token.size() == 0) continue;
-        tokens.push_back(token);
-    }
+    tokens = splitString(msg, ' ');
 
     if (tokens.size() == 0) return (clientRequest);
 
@@ -104,15 +119,28 @@ std::string Utils::to_upper(std::string str) {
 }
 
 bool Utils::isValidUnsignedInt(const std::string& str) {
-    if (str.empty()) {
-        return (false);
-    }
+    if (str.empty()) return (false);
 
     for (size_t i = 0; i < str.length(); ++i) {
         if (!std::isdigit(str[i])) {
             return (false);
         }
     }
+
+    return (true);
+}
+
+bool Utils::parse_join_msg(Request &req) {
+    // given a vector of strings, such as "Ch1,Ch2,Ch3" "key1,key2" in this format, create a pair of these strings in a vector such that it gives this result in a vector of pairs: {{"Ch1", "key1"}, {"Ch2", "key2"}, {"Ch3", ""}} in C++
+
+    if (req.getParams().size() != 2) return (false);
+
+    std::vector<std::string> channels = splitString(req.getParams()[0], ',');
+    std::vector<std::string> keys = splitString(req.getParams()[1], ',');
+
+    if (channels.size() < 1) return (false);
+
+    req.setJoinParams(channels, keys);
 
     return (true);
 }

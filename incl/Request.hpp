@@ -12,6 +12,7 @@ class Request {
     std::string _command;
     std::vector<std::string> _params;
     std::string _trailing;
+    std::vector<std::pair<std::string, std::string> > _join_params;
 
    public:
     Request();
@@ -26,6 +27,7 @@ class Request {
     void setCommand(std::string arg);
     void setTrailing(std::string arg);
     void setParams(std::string arg);
+    void setJoinParams(std::vector<std::string> channels, std::vector<std::string> keys);
 
     // -----------------------
     // Getters
@@ -36,4 +38,5 @@ class Request {
     std::string getCommand() const;
     std::string getTrailing() const;
     std::vector<std::string> getParams() const;
+    std::vector<std::pair<std::string, std::string> > getJoinParams() const;
 };

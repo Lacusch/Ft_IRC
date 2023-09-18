@@ -133,13 +133,12 @@ bool Utils::isValidUnsignedInt(const std::string& str) {
 bool Utils::parse_join_msg(Request &req) {
     // given a vector of strings, such as "Ch1,Ch2,Ch3" "key1,key2" in this format, create a pair of these strings in a vector such that it gives this result in a vector of pairs: {{"Ch1", "key1"}, {"Ch2", "key2"}, {"Ch3", ""}} in C++
 
-    if (req.getParams().size() != 2) return (false);
+    if (req.getParams().size() < 1) return (false);
 
     std::vector<std::string> channels = splitString(req.getParams()[0], ',');
     std::vector<std::string> keys = splitString(req.getParams()[1], ',');
 
     if (channels.size() < 1) return (false);
-
     req.setJoinParams(channels, keys);
 
     return (true);

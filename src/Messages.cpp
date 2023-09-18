@@ -168,6 +168,7 @@ int Server::handleMode(int fd, Request req) {
     if (params.size() == 1) {
         std::string channel_name = params[0].substr(1);
         Channel *channel = _channels[channel_name];
+        // Get operators
         (void)channel;
     }
     if (req.getParams().size() == 1) {

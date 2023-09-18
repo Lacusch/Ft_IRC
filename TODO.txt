@@ -1,1 +1,0 @@
-- Delete new Clients and new Channels when deleted

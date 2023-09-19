@@ -368,6 +368,8 @@ int Server::handleInvite(int fd, Request req) {
     Client *target = ch->getClientByNickName(this->getClientsList(), req.getParams()[0]);
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
 
+    if (!target->isRegistered()) return (1);
+
     int targetFd = target->getFd();
     if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
 
@@ -377,7 +379,7 @@ int Server::handleInvite(int fd, Request req) {
 }
 
 int Server::handleTopic(int fd, Request req) {
-    if (req.getParams().size() == 0 || req.getParams().size() > 2)
+    if (req.getParams().size() != 1)
         return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[0];
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
@@ -390,16 +392,17 @@ int Server::handleTopic(int fd, Request req) {
 
     if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
-    if (req.getParams().size() == 1) {
-        req.setParams(ch->getTopic());
+    if (req.getTrailing().empty()) {
+        req.setTrailing(ch->getTopic());
         return (ch->getTopic().empty()) ? (sendMessage(fd, RPL_NOTOPIC, req))
-                                        : (sendMessage(fd, RPL_TOPIC, req));
+                                        : (sendMessage(fd, TOPIC_SET, req));
     }
 
     if (ch->getTopicMode() == off) {
         if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
     }
-    ch->setTopic(req.getParams()[1]);
+    std::string topic = req.getTrailing();
+    ch->setTopic(req.getTrailing());
 
-    return (sendMessage(fd, RPL_TOPIC, req));
+    return (sendMessage(fd, TOPIC_SET, req));
 }

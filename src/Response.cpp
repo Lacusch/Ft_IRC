@@ -77,7 +77,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
                req.getParams()[0] + " :Channel should begin with #\r\n";
     } else if (res == TOPIC_SET) {
         msg += ":" + this->getName() + " 332 " + client_recipient(client) + " " +
-               req.getParams()[0] + " : *\r\n";
+               req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
     } else if (res == WHO_CHANNEL) {
         msg += ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
                "@127.0.0.0 " + this->getName() + " " + _clients[fd]->getNickName() + " 1 \r\n";
@@ -102,22 +102,19 @@ std::string Server::create_response(int fd, Res res, Request req) {
                "\r\n";
     } else if (res == ERR_NOTONCHANNEL) {
         msg += ":" + this->getName() + " 442 " + client_recipient(client) + " " +
-               req.getParams()[0] + " :You're not on that channel" + "\r\n";
+               req.getParams()[1] + " :You're not on that channel" + "\r\n";
     } else if (res == RPL_KICKED) {
         msg += "KICK " + req.getParams()[0] + " " + req.getParams()[1] + " :" +
                _clients[fd]->getUserName() + "\r\n";
     } else if (res == ERR_USERONCHANNEL) {
-        msg += ":" + this->getName() + " 443 " + client_recipient(client) + " " +
-               req.getParams()[0] + " :is already on channel" + "\r\n";
+        msg += ":" + this->getName() + " 443 " + client_recipient(client)  + " " +
+               req.getParams()[1] + " :is already on channel" + "\r\n";
     } else if (res == RPL_INVITING) {
         msg += ":" + this->getName() + " 341 " + client_recipient(client) + " " +
                req.getParams()[0] + " " + req.getParams()[1] + "\r\n";
     } else if (res == RPL_NOTOPIC) {
         msg += ":" + this->getName() + " 331 " + client_recipient(client) + " " +
                req.getParams()[0] + " :No topic is set" + "\r\n";
-    } else if (res == RPL_TOPIC) {
-        msg += ":" + this->getName() + " 332 " + client_recipient(client) + " " +
-               req.getParams()[0] + " : " + req.getParams()[1] + "\r\n";
     } else if (res == ERR_CHANNELISFULL) {
         msg += ":" + this->getName() + " 471 " + client_recipient(client) + " " +
                (req.getParams()[0][0] == '#' ? req.getParams()[0] : req.getParams()[1]) +
@@ -127,7 +124,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
                req.getParams()[0] + " :Cannot join channel (+i)" + "\r\n";
     } else if (res == ERR_USERSDONTMATCH) {
         msg += ":" + this->getName() + " 502 " + client_recipient(client) + " " +
-               req.getParams()[0] + " :" + client_recipient(client) +
+               req.getParams()[0] + " :" + req.getParams()[2] +
                " is already an operator"
                "\r\n";
     } else {

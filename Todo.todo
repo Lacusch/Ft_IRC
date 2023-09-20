@@ -1,0 +1,37 @@
+#1  INVITE
+              - (Message) Invitee needs to receive invite message
+
+#2  KICK
+              - (message) Response from kick needs to be fixed
+
+
+#3  JOIN
+              - (Message) Response whenever a user is already on a channel needs fixing
+
+
+
+#4  NICK
+              - When a member changes his nickname, other members in that channel
+                are not informed of this change. Hence, the list of names is not updated for them.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------- SEEMS FIXED -------------------
+
+MODE 
+Invite only                      ✅
+
+- When channel has a limit the 2nd try to join this channel gives the wrong Response              ✅
+       -  #a: Cannot join channel (+l)                         {1st try}
+       -  #a is already in is already on channel               {2nd and consecutive tries}

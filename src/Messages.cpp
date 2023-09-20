@@ -146,8 +146,17 @@ int Server::handleJoinChannel(int fd, Request req) {
     if (joinCommands.empty()) sendMessage(fd, NOT_ENOUGH_PARAMS, req);
     std::vector<std::pair<std::string, std::string> >::iterator it;
     for (it = joinCommands.begin(); it != joinCommands.end(); ++it)
-        handleSingleChannel(fd, req, it->first, it->second);
+        handleSingleChannel(fd, req, Utils::to_lower(it->first), it->second);
     return (0);
+}
+
+Channel *Server::getChannel(std::string channel_name) const {
+    std::map<std::string, Channel *>::iterator it;
+    std::map<std::string, Channel *> channels = _channels;
+    for (it = channels.begin(); it != channels.end(); ++it) {
+        if (Utils::to_upper(channel_name) == Utils::to_upper(it->first)) return (it->second);
+    }
+    return (NULL);
 }
 
 int Server::handleSingleChannel(int fd, Request req, std::string channel, std::string key) {
@@ -166,7 +175,8 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
         Channel *general = new Channel(channel, pass);
         _channels[channel] = general;
     }
-    Channel *ch = _channels[channel];
+    Channel *ch = getChannel(channel);
+    // TODO null case
     if (ch->getPassword() != key && ch->getPasswordMode())
         return (sendMessage(fd, ERR_BADCHANNELKEY, request));
     if (!ch->join(_clients[fd], fd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));

@@ -34,6 +34,7 @@ class Server {
     std::string getPassword() const;
     int getFdFromNickName(std::string nickname);
     std::map<int, Client *> getClientsList() const;
+    Channel *getChannel(std::string channel_name) const;
 
     int valid_args();
     int start_server();

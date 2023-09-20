@@ -62,12 +62,12 @@
 //     std::vector<std::pair<std::string, std::string> > join_params = req.getJoinParams();
 
 //     for (size_t i = 0; i < join_params.size(); ++i) {
-//         std::cout << "<Channel>: |" + join_params[i].first << "|      <key>: |" << join_params[i].second + "|" << std::endl;
+//         std::cout << "<Channel>: |" + join_params[i].first << "|      <key>: |" <<
+//         join_params[i].second + "|" << std::endl;
 //     }
 // }
 
 int main(int argc, char **argv) {
-    // testRequest();
     if (argc != 3) return (Utils::print_error(INVALID_ARGC));
     Server server(SERVER_NAME, SERVER_VERSION, argv[1], argv[2]);
     if (server.valid_args() || server.start_server()) return (1);

@@ -118,6 +118,13 @@ std::string Utils::to_upper(std::string str) {
     return (str);
 }
 
+std::string Utils::to_lower(std::string str) {
+    for (std::string::iterator it = str.begin(); it != str.end(); ++it) {
+        *it = std::tolower(*it);
+    }
+    return (str);
+}
+
 bool Utils::isValidUnsignedInt(const std::string& str) {
     if (str.empty()) return (false);
 
@@ -141,8 +148,7 @@ bool Utils::isMultiParamValid(std::string str) {
     return true;
 }
 
-bool Utils::parse_join_msg(Request &req) {
-
+bool Utils::parse_join_msg(Request& req) {
     if (req.getParams().size() < 1) return (false);
 
     std::vector<std::string> channels;

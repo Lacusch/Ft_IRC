@@ -70,6 +70,14 @@ bool Channel::modifyOpsPrivileges(Client* target, char option) {
     return (true);
 }
 
+
+void Channel::updateOpsListNick(std::string oldNick, std::string newNick) {
+    _opsList.erase(std::remove(_opsList.begin(), _opsList.end(), oldNick),
+                       _opsList.end());
+    _opsList.push_back(newNick);
+}
+
+
 // ----------------------------------------------------------
 //  Setters
 // ----------------------------------------------------------

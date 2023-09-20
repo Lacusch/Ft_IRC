@@ -72,4 +72,6 @@ class Server {
     Res handleTopicMode(Request req, Channel *ch);
     Res handleOperatorMode(Client *target, Request req, Channel *ch);
     std::string create_response(int fd, Res res, Request req);
+
+    void updateOpNickName(Client *client, std::string newNickName);
 };

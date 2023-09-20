@@ -24,6 +24,23 @@ int Server::handlePassword(int fd, Request req) {
     return (0);
 }
 
+void Server::updateOpNickName(Client *client, std::string newNickName) {
+    
+    std::map<std::string, Channel *> channels = this->_channels;
+
+    for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+        std::vector<std::string> opsList = it->second->getOpsList();
+        for (std::vector<std::string>::iterator it2 = opsList.begin(); it2 != opsList.end(); it2++) {
+            if (*it2 == client->getNickName()) {
+                Utils::print(B, *it2 + " I am updating my nick name to " + newNickName);
+
+                std::string oldNickName = *it2;
+                it->second->updateOpsListNick(oldNickName, newNickName);
+            }
+        }
+    }
+}
+
 int Server::handleNickName(int fd, Request req) {
     if (req.getParams().size() < 1) return (sendMessage(fd, NO_NICKNAME_GIVEN, req));
     if (req.getParams().size() > 1) return (sendMessage(fd, ENOUGH_PARAMS, req));
@@ -34,6 +51,7 @@ int Server::handleNickName(int fd, Request req) {
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
+    updateOpNickName(_clients[fd], nickname);
     sendMessage(fd, NICKNAME_REGISTERED, req);
     _clients[fd]->setNickName(nickname);
     _clients[fd]->setHasNickname(true);

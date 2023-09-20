@@ -90,6 +90,7 @@ int Server::run() {
             }
         }
     }
+    system("leaks ircserv");
     return (0);
 }
 

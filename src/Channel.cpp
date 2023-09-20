@@ -7,7 +7,7 @@ Channel::Channel(std::string& name, std::string& password)
       _limit(CHANNEL_USER_LIMIT),
       _inviteOnly(off),
       _topicMode(off),
-      _passwordMode(on) {
+      _passwordMode(off) {
     if (!password.empty()) _passwordMode = on;
 }
 
@@ -83,7 +83,6 @@ bool Channel::setTopic(const std::string& topic) {
 }
 
 bool Channel::setPassword(const std::string& password) {
-    if (_passwordMode == off) return (false);
     _password = password;
     return (true);
 }

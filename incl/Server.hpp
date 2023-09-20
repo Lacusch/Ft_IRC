@@ -52,6 +52,7 @@ class Server {
     int handleUser(int fd, Request req);
     int handlePrivateMsg(int fd, Request req);
     int handleJoinChannel(int fd, Request req);
+    int handleSingleChannel(int fd, Request req, std::string channel, std::string key);
     int handleChannelMessage(int fd, Request req);
     int handlePing(int fd, Request req);
     int handleWho(int fd, Request req);

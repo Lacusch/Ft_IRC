@@ -143,24 +143,43 @@ int Server::sendRegisteredUsers(int fd, Request req, Channel *channel) {
 }
 
 int Server::handleJoinChannel(int fd, Request req) {
-    if (req.getParams().size() == 0) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
-    if (req.getParams().size() > 2) return (sendMessage(fd, ENOUGH_PARAMS, req));
-    std::string channel_name = req.getParams()[0];
-    std::string channel_password = "";
-    if (req.getParams().size() == 2) channel_password = req.getParams()[1];
-    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
-    channel_name = channel_name.substr(1);
-    if (!channelExists(channel_name)) {
-        Channel *general = new Channel(channel_name, channel_password);
-        _channels[channel_name] = general;
+    Utils::parse_join_msg(req);
+    std::vector<std::pair<std::string, std::string> > joinCommands = req.getJoinParams();
+    if (joinCommands.empty()) sendMessage(fd, NOT_ENOUGH_PARAMS, req);
+    std::vector<std::pair<std::string, std::string> >::iterator it;
+    for (it = joinCommands.begin(); it != joinCommands.end(); ++it)
+        handleSingleChannel(fd, req, it->first, it->second);
+    return (0);
+}
+
+int Server::handleSingleChannel(int fd, Request req, std::string channel, std::string key) {
+    Request request;
+    request.setCommand(req.getCommand());
+    request.setFd(req.getFd());
+    request.setReceiverFd(req.getReceiverFd());
+    request.setPrefix(req.getPrefix());
+    request.setTrailing(req.getTrailing());
+    request.setParams(channel);
+    if (!key.empty()) request.setParams(key);
+    if (channel[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, request));
+    channel = channel.substr(1);
+    if (!channelExists(channel)) {
+        std::string pass = (key.empty() ? "" : key);
+        Channel *general = new Channel(channel, pass);
+        _channels[channel] = general;
     }
-    Channel *ch = _channels[channel_name];
+    Channel *ch = _channels[channel];
+    unsigned int membersInChannel = ch->getMembersList().size();
     bool requiresPassword = ch->getPasswordMode();
-    if (ch->getPassword() != channel_password && requiresPassword)
-        return (sendMessage(fd, ERR_BADCHANNELKEY, req));
-    ch->join(_clients[fd], fd);
-    broadcastChannel(fd, req, ch, JOIN_CHANNEL);
-    sendRegisteredUsers(fd, req, ch);
+
+    std::cout << "ch key[" << ch->getPassword().length() << "]: " << ch->getPassword()
+              << "   -  key[" << key.length() << "]: " << key << std::endl;
+    if (ch->getPassword() != key && requiresPassword)
+        return (sendMessage(fd, ERR_BADCHANNELKEY, request));
+    if (!ch->join(_clients[fd], fd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
+    if (membersInChannel >= ch->getLimit()) return (sendMessage(fd, ERR_CHANNELISFULL, req));
+    broadcastChannel(fd, request, ch, JOIN_CHANNEL);
+    sendRegisteredUsers(fd, request, ch);
     return (0);
 }
 
@@ -221,13 +240,11 @@ Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
 Res Server::handleTopicMode(Request req, Channel *ch) {
     std::string mode = req.getParams()[1];
     if (req.getParams().size() != 2) return (NOT_ENOUGH_PARAMS);
-
     if (mode[0] == '+') {
         ch->setTopicMode(off);  // only operators can set topic when it's off
     } else if (mode[0] == '-') {
         ch->setTopicMode(on);  // all users can set topic when it's on
     }
-
     return (RPL_CHANNELMODEIS);
 }
 
@@ -236,7 +253,6 @@ Res Server::handleInviteOnlyMode(Request req, Channel *ch) {
     if (req.getParams().size() != 2) {
         return (NOT_ENOUGH_PARAMS);
     }
-
     if (mode[0] == '+') {
         ch->setInviteOnlyMode(on);
     } else if (mode[0] == '-') {

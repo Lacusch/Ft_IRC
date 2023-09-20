@@ -167,15 +167,11 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
         _channels[channel] = general;
     }
     Channel *ch = _channels[channel];
-    unsigned int membersInChannel = ch->getMembersList().size();
-    bool requiresPassword = ch->getPasswordMode();
-
-    std::cout << "ch key[" << ch->getPassword().length() << "]: " << ch->getPassword()
-              << "   -  key[" << key.length() << "]: " << key << std::endl;
-    if (ch->getPassword() != key && requiresPassword)
+    if (ch->getPassword() != key && ch->getPasswordMode())
         return (sendMessage(fd, ERR_BADCHANNELKEY, request));
     if (!ch->join(_clients[fd], fd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
-    if (membersInChannel >= ch->getLimit()) return (sendMessage(fd, ERR_CHANNELISFULL, req));
+    if (ch->getMembersList().size() >= ch->getLimit())
+        return (sendMessage(fd, ERR_CHANNELISFULL, req));
     broadcastChannel(fd, request, ch, JOIN_CHANNEL);
     sendRegisteredUsers(fd, request, ch);
     return (0);
@@ -194,12 +190,15 @@ int Server::handleMode(int fd, Request req) {
             send(fd, msg.c_str(), msg.size(), 0);
         }
         std::string topic = channel->getTopic();
-        (void)topic;
         bool topiChangeForOperators = !channel->getTopicMode();
-        std::string msg_topic = ":" + this->getName() + " MODE " + "#" + channel_name + " " +
-                                (topiChangeForOperators ? "+t" : "-t") + "\r\n";
-        Utils::print(G, msg_topic);
-        send(fd, msg_topic.c_str(), msg_topic.size(), 0);
+        std::string mode_msg = ":" + this->getName() + " MODE " + "#" + channel_name + " " +
+                               (topiChangeForOperators ? "+t" : "-t") + "\r\n";
+        Utils::print(G, mode_msg);
+        if (!topic.empty()) {
+            req.setTrailing(topic);
+            (sendMessage(fd, TOPIC_SET, req));
+        }
+        send(fd, mode_msg.c_str(), mode_msg.size(), 0);
         return (0);
     }
     if (req.getParams().size() == 2) {
@@ -401,8 +400,7 @@ int Server::handleInvite(int fd, Request req) {
 }
 
 int Server::handleTopic(int fd, Request req) {
-    if (req.getParams().size() != 1)
-        return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    if (req.getParams().size() != 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string channel_name = req.getParams()[0];
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 

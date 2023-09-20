@@ -114,7 +114,7 @@ int Server::handleWho(int fd, Request req) {
 }
 
 int Server::handleChannelMessage(int fd, Request req) {
-    std::string channel_name = req.getParams()[0];
+    std::string channel_name = Utils::to_lower(req.getParams()[0]);
     channel_name = channel_name.substr(1);
     Channel *channel = _channels[channel_name];
     std::map<int, Client *> members = channel->getMembersList();
@@ -208,7 +208,7 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
 int Server::handleMode(int fd, Request req) {
     std::vector<std::string> params = req.getParams();
     if (params.size() == 1) {
-        std::string channel_name = params[0].substr(1);
+        std::string channel_name = Utils::to_lower(params[0].substr(1));
         Channel *channel = _channels[channel_name];
         std::vector<std::string> OpsList = channel->getOpsList();
         for (std::vector<std::string>::iterator it = OpsList.begin(); it != OpsList.end(); ++it) {
@@ -234,7 +234,7 @@ int Server::handleMode(int fd, Request req) {
     }
     if (req.getParams().size() < 2 || req.getParams().size() > 3)
         return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
-    std::string channel_name = req.getParams()[0];
+    std::string channel_name = Utils::to_lower(req.getParams()[0]);
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 
     channel_name = channel_name.substr(1);
@@ -401,7 +401,7 @@ int Server::handleKick(int fd, Request req) {
 
 int Server::handleInvite(int fd, Request req) {
     if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
-    std::string channel_name = req.getParams()[1];
+    std::string channel_name = Utils::to_lower(req.getParams()[1]);
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 
     channel_name = channel_name.substr(1);
@@ -429,7 +429,7 @@ int Server::handleInvite(int fd, Request req) {
 
 int Server::handleTopic(int fd, Request req) {
     if (req.getParams().size() != 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
-    std::string channel_name = req.getParams()[0];
+    std::string channel_name = Utils::to_lower(req.getParams()[0]);
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 
     channel_name = channel_name.substr(1);

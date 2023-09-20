@@ -149,7 +149,7 @@ int Server::clientMessage(int i) {
         if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
         if (req.getCommand() == "USER") return (this->handleUser(fd, req));
         if (!_clients[fd]->isRegistered() || !_clients[fd]->hasNickname()) {
-            std::string msg_register = ":mr:server.com 464 * :Yo must register before\r\n";
+            std::string msg_register = ":mr:server.com 464 * :You must register before\r\n";
             return (send(_sockets[i].fd, msg_register.c_str(), msg_register.size(), 0));
         }
         if (req.getCommand() == "PRIVMSG")

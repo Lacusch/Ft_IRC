@@ -55,15 +55,14 @@
 // void testRequest() {
 //     Request req = Request();
 //     req.setCommand("join");
-//     req.setParams("#ch1");
-//     req.setParams("a");
+//     req.setParams("#ch1,#ch2,#ch3,ch4");
+//     req.setParams("a,b,c");
 
 //     Utils::parse_join_msg(req);
 //     std::vector<std::pair<std::string, std::string> > join_params = req.getJoinParams();
 
 //     for (size_t i = 0; i < join_params.size(); ++i) {
-//         std::cout << "<Channel>: |" + join_params[i].first << "|      <key>: |" <<
-//         join_params[i].second + "|" << std::endl;
+//         std::cout << "<Channel>: |" + join_params[i].first << "|      <key>: |" << join_params[i].second + "|" << std::endl;
 //     }
 // }
 

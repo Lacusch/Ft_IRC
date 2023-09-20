@@ -13,6 +13,7 @@ class Utils {
     static std::string to_upper(std::string str);
     static bool isValidUnsignedInt(const std::string& str);
     static bool parse_join_msg(Request &req);
+    static bool isMultiParamValid(std::string str);
     static std::vector<std::string> splitString(std::string str, char delimiter);
     static std::string removeSpace(std::string str);
 };

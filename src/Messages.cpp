@@ -195,11 +195,12 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
     }
     Channel *ch = getChannel(channel);
     // TODO null case
+    if (!ch->isMember(_clients[fd], fd) && ch->isInviteOnly()) return (sendMessage(fd, ERR_INVITEONLYCHAN, request));
     if (ch->getPassword() != key && ch->getPasswordMode())
         return (sendMessage(fd, ERR_BADCHANNELKEY, request));
-    if (!ch->join(_clients[fd], fd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
     if (ch->getMembersList().size() >= ch->getLimit())
         return (sendMessage(fd, ERR_CHANNELISFULL, req));
+    if (!ch->join(_clients[fd], fd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
     broadcastChannel(fd, request, ch, JOIN_CHANNEL);
     sendRegisteredUsers(fd, request, ch);
     return (0);

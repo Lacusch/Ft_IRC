@@ -32,8 +32,6 @@ void Server::updateOpNickName(Client *client, std::string newNickName) {
         std::vector<std::string> opsList = it->second->getOpsList();
         for (std::vector<std::string>::iterator it2 = opsList.begin(); it2 != opsList.end(); it2++) {
             if (*it2 == client->getNickName()) {
-                Utils::print(B, *it2 + " I am updating my nick name to " + newNickName);
-
                 std::string oldNickName = *it2;
                 it->second->updateOpsListNick(oldNickName, newNickName);
             }
@@ -139,6 +137,27 @@ int Server::broadcastChannel(int fd, Request req, Channel *channel, Res res) {
     return (0);
 }
 
+int Server::broadcastQuitMsg(int fd, Channel *channel) {
+
+    std::map<int, Client *> members = channel->getMembersList();
+    std::map<int, Client *>::iterator it;
+    std::string quittedClientNick;
+    std::string quittedClientName;
+    for (it = members.begin(); it != members.end(); ++it) {
+        Client *idx_member = it->second;
+        quittedClientNick = _clients[fd]->getNickName();
+        quittedClientName = _clients[fd]->getUserName();
+        std::string quitMsg;
+
+        quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@127.0.0.1 " + 
+                    " PART #" + channel->getName() + " :Quitted" +"\r\n";
+        Utils::print(G, quitMsg);
+        send(idx_member->getFd(), quitMsg.c_str(), quitMsg.size(), 0);
+
+    };
+    return (0);
+}
+
 int Server::sendRegisteredUsers(int fd, Request req, Channel *channel) {
     std::map<int, Client *> members = channel->getMembersList();
     std::map<int, Client *>::iterator it;
@@ -187,6 +206,7 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
     request.setParams(channel);
     if (!key.empty()) request.setParams(key);
     if (channel[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, request));
+    if (channel.length() == 1) return (sendMessage(fd, ERR_NOSUCHCHANNEL, request));
     channel = channel.substr(1);
     if (!channelExists(channel)) {
         std::string pass = (key.empty() ? "" : key);
@@ -201,6 +221,10 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
     if (ch->getMembersList().size() >= ch->getLimit())
         return (sendMessage(fd, ERR_CHANNELISFULL, req));
     if (!ch->join(_clients[fd], fd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
+    if (ch->getMembersList().size() == 1 && !key.empty()) {
+        ch->setPassword(key);
+        ch->setPasswordMode(on);
+    }
     broadcastChannel(fd, request, ch, JOIN_CHANNEL);
     sendRegisteredUsers(fd, request, ch);
     return (0);
@@ -471,4 +495,18 @@ int Server::handlePart(int fd, Request req) {
 
     broadcastChannel(fd, req, ch, RPL_PARTED);
     return (sendMessage(fd, RPL_PARTED, req));
+}
+
+int Server::handleQuit(int fd, Request req) {
+
+    (void) req;
+
+    for (std::map<std::string, Channel *>::iterator it = this->_channels.begin(); it != this->_channels.end(); ++it) {
+
+        if (it->second->isMember(_clients[fd], fd)) {
+            broadcastQuitMsg(fd, it->second);
+            it->second->leave(_clients[fd], fd);
+        }
+    }
+    return (0);
 }

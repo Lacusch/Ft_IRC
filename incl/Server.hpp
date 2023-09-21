@@ -63,9 +63,11 @@ class Server {
     int handleTopic(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
     int handlePart(int fd, Request req);
+    int handleQuit(int fd, Request req);
 
     int broadcastChannel(int fd, Request req, Channel *channel, Res res);
     int sendRegisteredUsers(int fd, Request req, Channel *channel);
+    int broadcastQuitMsg(int fd, Channel *channel);
 
     Res handleKeyMode(Request req, Channel *ch);
     Res handleUserLimitMode(Request req, Channel *ch);

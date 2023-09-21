@@ -55,6 +55,13 @@ bool Channel::leave(Client* client, int fd) {
         this->modifyOpsPrivileges(client, '-');
     }
     _members.erase(fd);
+    if (_members.size() == 0) {
+        _inviteOnly = off;
+        _topicMode = off;
+        _passwordMode = off;
+        _limit = CHANNEL_USER_LIMIT;
+        _topic = "";
+    }
     return (true);
 }
 

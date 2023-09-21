@@ -172,6 +172,8 @@ int Server::clientMessage(int i) {
             return (this->handleTopic(fd, req));
         else if (req.getCommand() == "PART")
             return (this->handlePart(fd, req));
+        else if (req.getCommand() == "QUIT")
+            return (this->handleQuit(fd, req));
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }

@@ -240,7 +240,7 @@ int Server::handleMode(int fd, Request req) {
 
     channel_name = channel_name.substr(1);
 
-    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
 
     Channel *ch = _channels[channel_name];
 
@@ -380,7 +380,7 @@ int Server::handleKick(int fd, Request req) {
 
     channel_name = channel_name.substr(1);
 
-    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
 
     Channel *ch = _channels[channel_name];
 
@@ -407,13 +407,13 @@ int Server::handleInvite(int fd, Request req) {
 
     channel_name = channel_name.substr(1);
 
-    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
 
     Channel *ch = _channels[channel_name];
 
     if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
-    if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+    if (!ch->userIsChannelOp(_clients[fd]) && ch->isInviteOnly()) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
 
     Client *target = ch->getClientByNickName(this->getClientsList(), req.getParams()[0]);
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
@@ -435,7 +435,7 @@ int Server::handleTopic(int fd, Request req) {
 
     channel_name = channel_name.substr(1);
 
-    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHNICK, req));
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
 
     Channel *ch = _channels[channel_name];
 
@@ -454,4 +454,21 @@ int Server::handleTopic(int fd, Request req) {
     ch->setTopic(req.getTrailing());
 
     return (broadcastChannel(fd, req, ch, TOPIC_SET));
+}
+
+int Server::handlePart(int fd, Request req) {
+    if (req.getParams().size() != 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    std::string channel_name = Utils::to_lower(req.getParams()[0]);
+    if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
+
+    channel_name = channel_name.substr(1);
+
+    if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
+
+    Channel *ch = _channels[channel_name];
+
+    if (!ch->leave(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
+
+    broadcastChannel(fd, req, ch, RPL_PARTED);
+    return (sendMessage(fd, RPL_PARTED, req));
 }

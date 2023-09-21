@@ -102,7 +102,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
               "\r\n";
     } else if (res == ERR_NOTONCHANNEL) {
         msg = ":" + this->getName() + " 442 " + client_recipient(client) + " " +
-              req.getParams()[1] + " :You're not on that channel" + "\r\n";
+              (req.getParams().size() == 1 ? "" : req.getParams()[1]) + " :You're not on that channel" + "\r\n";
     } else if (res == RPL_KICKED) {
         msg = "KICK " + req.getParams()[0] + " " + req.getParams()[1] + " :" +
               _clients[fd]->getUserName() + "\r\n";
@@ -133,6 +133,11 @@ std::string Server::create_response(int fd, Res res, Request req) {
               req.getParams()[0] + " :" + req.getParams()[2] +
               " is already an operator"
               "\r\n";
+    } else if (res == ERR_NOSUCHCHANNEL) {
+        msg = ":" + this->getName() + " 403 " + client_recipient(client) + " " +
+              req.getParams()[0] + " :No such channel" + "\r\n";
+    } else if (res == RPL_PARTED) {
+        msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " + " PART " + req.getParams()[0] + " :Leaving the channel" +"\r\n";
     } else {
         msg = ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
               "\r\n";

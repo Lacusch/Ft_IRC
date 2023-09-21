@@ -170,6 +170,8 @@ int Server::clientMessage(int i) {
             return (this->handleInvite(fd, req));
         else if (req.getCommand() == "TOPIC")
             return (this->handleTopic(fd, req));
+        else if (req.getCommand() == "PART")
+            return (this->handlePart(fd, req));
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }

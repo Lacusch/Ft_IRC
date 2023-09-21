@@ -62,6 +62,7 @@ class Server {
     int handleInvite(int fd, Request req);
     int handleTopic(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
+    int handlePart(int fd, Request req);
 
     int broadcastChannel(int fd, Request req, Channel *channel, Res res);
     int sendRegisteredUsers(int fd, Request req, Channel *channel);

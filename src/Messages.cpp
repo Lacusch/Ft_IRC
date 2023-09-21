@@ -25,12 +25,13 @@ int Server::handlePassword(int fd, Request req) {
 }
 
 void Server::updateOpNickName(Client *client, std::string newNickName) {
-    
     std::map<std::string, Channel *> channels = this->_channels;
 
-    for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+    for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end();
+         it++) {
         std::vector<std::string> opsList = it->second->getOpsList();
-        for (std::vector<std::string>::iterator it2 = opsList.begin(); it2 != opsList.end(); it2++) {
+        for (std::vector<std::string>::iterator it2 = opsList.begin(); it2 != opsList.end();
+             it2++) {
             if (*it2 == client->getNickName()) {
                 Utils::print(B, *it2 + " I am updating my nick name to " + newNickName);
 
@@ -52,7 +53,11 @@ int Server::handleNickName(int fd, Request req) {
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     updateOpNickName(_clients[fd], nickname);
-    sendMessage(fd, NICKNAME_REGISTERED, req);
+    std::map<int, Client *>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        req.setReceiverFd(it->second->getFd());
+        sendMessage(fd, NICKNAME_REGISTERED, req);
+    }
     _clients[fd]->setNickName(nickname);
     _clients[fd]->setHasNickname(true);
     if (!_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
@@ -195,7 +200,8 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
     }
     Channel *ch = getChannel(channel);
     // TODO null case
-    if (!ch->isMember(_clients[fd], fd) && ch->isInviteOnly()) return (sendMessage(fd, ERR_INVITEONLYCHAN, request));
+    if (!ch->isMember(_clients[fd], fd) && ch->isInviteOnly())
+        return (sendMessage(fd, ERR_INVITEONLYCHAN, request));
     if (ch->getPassword() != key && ch->getPasswordMode())
         return (sendMessage(fd, ERR_BADCHANNELKEY, request));
     if (ch->getMembersList().size() >= ch->getLimit())
@@ -424,7 +430,10 @@ int Server::handleInvite(int fd, Request req) {
     if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
 
     if (ch->getChannelSize() >= ch->getLimit()) return (sendMessage(fd, ERR_CHANNELISFULL, req));
-
+    std::string response_msg = ":" + _clients[fd]->getNickName() + " INVITE " +
+                               target->getNickName() + " #" + channel_name + "\r\n";
+    send(targetFd, response_msg.c_str(), response_msg.size(), 0);
+    Utils::print(G, response_msg);
     return (sendMessage(fd, RPL_INVITING, req));
 }
 

@@ -105,10 +105,10 @@ std::string Server::create_response(int fd, Res res, Request req) {
               req.getParams()[1] + " :You're not on that channel" + "\r\n";
     } else if (res == RPL_KICKED) {
         msg = "KICK " + req.getParams()[0] + " " + req.getParams()[1] + " :" +
-              _clients[fd]->getUserName() + "\r\n";
+              _clients[fd]->getNickName() + "\r\n";
     } else if (res == ERR_USERONCHANNEL) {
         msg = ":" + this->getName() + " 443 " + client_recipient(client) + " " +
-              req.getParams()[0] + " :is already on channel" + "\r\n";
+              client_recipient(client) + ": channel " + "\r\n";
     } else if (res == RPL_INVITING) {
         msg = ":" + this->getName() + " 341 " + client_recipient(client) + " " +
               req.getParams()[0] + " " + req.getParams()[1] + "\r\n";

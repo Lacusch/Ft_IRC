@@ -36,6 +36,11 @@ std::string Server::create_response(int fd, Res res, Request req) {
         msg = ":" + this->getName() + " 432 " + client_recipient(client) +
               (req.getParams()[0].length() ? " " + req.getParams()[0] : "") +
               " :Erroneous nickname\r\n";
+    } else if (res == ERR_CHANNELNAME_LENGTH) {
+        msg = ":" + this->getName() + " 401 " + client_recipient(client) +
+              " <channel_name> "
+              " : Channel length should be less than 200 chars" +
+              "\r\n";
     } else if (res == NICKNAME_IN_USE) {
         msg = ":" + this->getName() + " 433 " + client_recipient(client) +
               (req.getParams().size() ? " " + req.getParams()[0] : "") +
@@ -102,7 +107,8 @@ std::string Server::create_response(int fd, Res res, Request req) {
               "\r\n";
     } else if (res == ERR_NOTONCHANNEL) {
         msg = ":" + this->getName() + " 442 " + client_recipient(client) + " " +
-              (req.getParams().size() == 1 ? "" : req.getParams()[1]) + " :You're not on that channel" + "\r\n";
+              (req.getParams().size() == 1 ? "" : req.getParams()[1]) +
+              " :You're not on that channel" + "\r\n";
     } else if (res == RPL_KICKED) {
         msg = "KICK " + req.getParams()[0] + " " + req.getParams()[1] + " :" +
               _clients[fd]->getNickName() + "\r\n";
@@ -137,7 +143,8 @@ std::string Server::create_response(int fd, Res res, Request req) {
         msg = ":" + this->getName() + " 403 " + client_recipient(client) + " " +
               req.getParams()[0] + " :No such channel" + "\r\n";
     } else if (res == RPL_PARTED) {
-        msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " + " PART " + req.getParams()[0] + " :Leaving the channel" +"\r\n";
+        msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " + " PART " +
+              req.getParams()[0] + " :Leaving the channel" + "\r\n";
     } else {
         msg = ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
               "\r\n";

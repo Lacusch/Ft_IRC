@@ -80,6 +80,7 @@ int Server::start_server() {
 
 int Server::run() {
     while (42) {
+        // std::cout << "Clients size: " << _clients.size() << std::endl;
         if (poll(_sockets.data(), _sockets.size(), -1) == -1) return (1);
         for (size_t i = 0; i < _sockets.size(); i++) {
             if (_sockets[i].revents & POLLIN) {
@@ -90,7 +91,6 @@ int Server::run() {
             }
         }
     }
-    system("leaks ircserv");
     return (0);
 }
 
@@ -125,7 +125,6 @@ int Server::clientMessage(int i) {
         Utils::print(R, "Error: recv");
     else {
         int fd = _sockets[i].fd;
-
         Client* client = _clients.find(fd)->second;
         std::string msg(buffer, bytesRead);
         if (client->getNickName() != "") {
@@ -156,6 +155,8 @@ int Server::clientMessage(int i) {
             return (this->handlePrivateMsg(fd, req));
         else if (req.getCommand() == "PING")
             return (this->handlePing(fd, req));
+        else if (req.getCommand() == "PONG")
+            return (true);
         else if (req.getCommand() == "NOTICE")
             return (true);
         else if (req.getCommand() == "WHO")

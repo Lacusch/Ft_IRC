@@ -1,4 +1,5 @@
 #include "../incl/Request.hpp"
+
 #include "../incl/Utils.hpp"
 
 Request::Request() {}
@@ -34,11 +35,9 @@ void Request::setTrailing(std::string arg) { this->_trailing = arg; }
 void Request::setParams(std::string arg) { this->_params.push_back(arg); }
 
 void Request::setJoinParams(std::vector<std::string> channels, std::vector<std::string> keys) {
-
     for (size_t i = 0; i < channels.size(); ++i) {
         std::string first = Utils::removeSpace(channels[i]);
         std::string second = (i < keys.size()) ? Utils::removeSpace(keys[i]) : "";
         _join_params.push_back(std::make_pair(first, second));
     }
-
 }

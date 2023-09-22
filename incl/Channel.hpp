@@ -1,15 +1,12 @@
 #pragma once
 
-#include <limits>
-#include <map>
-#include <string>
-
 #include "Client.hpp"
+#include "Shared.hpp"
 #include "Utils.hpp"
 
-enum State { off, on };
-
 #define CHANNEL_USER_LIMIT 5
+
+enum State { off, on };
 
 class Channel {
    private:
@@ -38,7 +35,9 @@ class Channel {
     bool setTopic(const std::string &topic);        // set the chann`l topic
     bool setPassword(const std::string &password);  // set the channel password
     bool setUserLimit(unsigned int limit);
-    void updateOpsListNick(std::string oldNick, std::string newNick); // updates the nickname of the operator that changes their nickname
+    void updateOpsListNick(
+        std::string oldNick,
+        std::string newNick);  // updates the nickname of the operator that changes their nickname
 
     // Mode Setters
     void setTopicMode(State mode);

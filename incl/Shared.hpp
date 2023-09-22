@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cctype>
+#include <csignal>
 #include <cstddef>
 #include <ctime>
 #include <iostream>
@@ -17,5 +19,3 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <algorithm>

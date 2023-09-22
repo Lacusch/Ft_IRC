@@ -127,13 +127,11 @@ std::string Utils::to_lower(std::string str) {
 
 bool Utils::isValidUnsignedInt(const std::string& str) {
     if (str.empty()) return (false);
-
     for (size_t i = 0; i < str.length(); ++i) {
         if (!std::isdigit(str[i])) {
             return (false);
         }
     }
-
     return (true);
 }
 
@@ -144,7 +142,6 @@ bool Utils::isMultiParamValid(std::string str) {
         if ((str[i] == ',' && str[++i] == ',')) return (false);
         if (str[i] == ' ') return (false);
     }
-
     return true;
 }
 
@@ -166,6 +163,5 @@ bool Utils::parse_join_msg(Request& req) {
     }
 
     req.setJoinParams(channels, keys);
-
     return (true);
 }

@@ -143,7 +143,6 @@ int Server::broadcastChannel(int fd, Request req, Channel *channel, Res res) {
 }
 
 int Server::broadcastQuitMsg(int fd, Channel *channel) {
-
     std::map<int, Client *> members = channel->getMembersList();
     std::map<int, Client *>::iterator it;
     std::string quittedClientNick;
@@ -154,11 +153,10 @@ int Server::broadcastQuitMsg(int fd, Channel *channel) {
         quittedClientName = _clients[fd]->getUserName();
         std::string quitMsg;
 
-        quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@127.0.0.1 " + 
-                    " PART #" + channel->getName() + " :Quitted" +"\r\n";
+        quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@127.0.0.1 " + " PART #" +
+                  channel->getName() + " :Quitted" + "\r\n";
         Utils::print(G, quitMsg);
         send(idx_member->getFd(), quitMsg.c_str(), quitMsg.size(), 0);
-
     };
     return (0);
 }
@@ -212,6 +210,7 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
     if (!key.empty()) request.setParams(key);
     if (channel[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, request));
     if (channel.length() == 1) return (sendMessage(fd, ERR_NOSUCHCHANNEL, request));
+    if (channel.length() > 201) return (sendMessage(fd, ERR_CHANNELNAME_LENGTH, request));
     channel = channel.substr(1);
     if (!channelExists(channel)) {
         std::string pass = (key.empty() ? "" : key);
@@ -443,7 +442,8 @@ int Server::handleInvite(int fd, Request req) {
 
     if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
-    if (!ch->userIsChannelOp(_clients[fd]) && ch->isInviteOnly()) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+    if (!ch->userIsChannelOp(_clients[fd]) && ch->isInviteOnly())
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
 
     Client *target = ch->getClientByNickName(this->getClientsList(), req.getParams()[0]);
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
@@ -507,11 +507,10 @@ int Server::handlePart(int fd, Request req) {
 }
 
 int Server::handleQuit(int fd, Request req) {
+    (void)req;
 
-    (void) req;
-
-    for (std::map<std::string, Channel *>::iterator it = this->_channels.begin(); it != this->_channels.end(); ++it) {
-
+    for (std::map<std::string, Channel *>::iterator it = this->_channels.begin();
+         it != this->_channels.end(); ++it) {
         if (it->second->isMember(_clients[fd], fd)) {
             broadcastQuitMsg(fd, it->second);
             it->second->leave(_clients[fd], fd);

@@ -85,7 +85,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
         msg = ":" + this->getName() + " 472 " + client_recipient(client) + " " +
               req.getParams()[0] + " :is unknown mode char" + "\r\n";
     } else if (res == ERR_USERNOTINCHANNEL) {
-        msg = ":" + this->getName() + " 441 " + client_recipient(client) + " " +
+        msg = ":" + this->getName() + " 441 " +
               req.getParams()[1] + " " + req.getParams()[0] + " :They aren't on that channel" +
               "\r\n";
     } else if (res == ERR_CHANOPRIVSNEEDED) {
@@ -101,11 +101,13 @@ std::string Server::create_response(int fd, Res res, Request req) {
                    : req.getParams()[0] + " " + req.getParams()[1] + " " + req.getParams()[2]) +
               "\r\n";
     } else if (res == ERR_NOTONCHANNEL) {
-        msg = ":" + this->getName() + " 442 " + client_recipient(client) + " " +
-              (req.getParams().size() == 1 ? "" : req.getParams()[1]) + " :You're not on that channel" + "\r\n";
+        msg = ":" + this->getName() + " 442 " + (req.getParams()[0][0] == '#' ? req.getParams()[0] 
+                                                                              : !req.getParams()[1].empty() 
+                                                                              ? req.getParams()[1] : "") +
+              " :You're not on that channel" + "\r\n";
     } else if (res == RPL_KICKED) {
-        msg = "KICK " + req.getParams()[0] + " " + req.getParams()[1] + " :" +
-              _clients[fd]->getNickName() + "\r\n";
+        msg = "KICK " + req.getParams()[0] + " " + req.getParams()[1] + 
+        " :" + (req.getTrailing().empty() ? "" : req.getTrailing()) + "\r\n";
     } else if (res == ERR_USERONCHANNEL) {
         msg = ":" + this->getName() + " 443 " + client_recipient(client) + " " +
               client_recipient(client) + ": channel " + "\r\n";

@@ -84,6 +84,7 @@ int Server::run() {
         if (poll(_sockets.data(), _sockets.size(), -1) == -1) return (1);
         for (size_t i = 0; i < _sockets.size(); i++) {
             if (_sockets[i].revents & POLLIN) {
+                std::cout << "socket: " << _sockets[i].fd << std::endl;
                 if (_sockets[i].fd == _fd)
                     newClient();
                 else

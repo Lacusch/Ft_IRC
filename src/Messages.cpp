@@ -54,7 +54,7 @@ int Server::handleNickName(int fd, Request req) {
     std::map<int, Client *>::iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it) {
         req.setReceiverFd(it->second->getFd());
-        sendMessage(fd, NICKNAME_REGISTERED, req);
+        if (it->second->isRegistered()) sendMessage(fd, NICKNAME_REGISTERED, req);
     }
     _clients[fd]->setNickName(nickname);
     _clients[fd]->setHasNickname(true);

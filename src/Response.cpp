@@ -83,7 +83,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
               "@127.0.0.0 " + this->getName() + " " + _clients[fd]->getNickName() + " 1 \r\n";
     } else if (res == ERR_UNKNOWNMODE) {
         msg = ":" + this->getName() + " 472 " + client_recipient(client) + " " +
-              req.getParams()[0] + " :is unknown mode char" + "\r\n";
+              req.getParams()[0] + " :is unknown mode " + (req.getParams().size() > 1 ? req.getParams()[1] : "") + "\r\n";
     } else if (res == ERR_USERNOTINCHANNEL) {
         msg = ":" + this->getName() + " 441 " +
               req.getParams()[1] + " " + req.getParams()[0] + " :They aren't on that channel" +
@@ -102,7 +102,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
               "\r\n";
     } else if (res == ERR_NOTONCHANNEL) {
         msg = ":" + this->getName() + " 442 " + (req.getParams()[0][0] == '#' ? req.getParams()[0] 
-                                                                              : !req.getParams()[1].empty() 
+                                                                              : req.getParams().size() > 1
                                                                               ? req.getParams()[1] : "") +
               " :You're not on that channel" + "\r\n";
     } else if (res == RPL_KICKED) {
@@ -137,7 +137,10 @@ std::string Server::create_response(int fd, Res res, Request req) {
               "\r\n";
     } else if (res == ERR_NOSUCHCHANNEL) {
         msg = ":" + this->getName() + " 403 " + client_recipient(client) + " " +
-              req.getParams()[0] + " :No such channel" + "\r\n";
+              (req.getParams()[0][0] == '#' ? req.getParams()[0] 
+                                            : req.getParams().size() > 1
+                                            ? req.getParams()[1] : "") +
+              " :No such channel" + "\r\n";
     } else if (res == RPL_PARTED) {
         msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " + " PART " + req.getParams()[0] + " :Leaving the channel" +"\r\n";
     } else {

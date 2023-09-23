@@ -274,8 +274,6 @@ int Server::handleMode(int fd, Request req) {
     if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
 
     Channel *ch = _channels[channel_name];
-
-    // Check if the user is a channel operator
     if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
     return (this->handleChannelMode(fd, req, ch));
 }

@@ -17,6 +17,21 @@ Server::~Server() {
     std::cout << "destructor called" << std::endl;
 };
 
+void Server::clean(void) {
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        close(_sockets[i].fd);
+    }
+    // Delete all Client objects in the map
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        delete it->second;
+    }
+    // Delete all Channel objects in the map
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end();
+         ++it) {
+        delete it->second;
+    }
+}
+
 std::string Server::getName() const { return (this->_name); }
 
 std::string Server::getVersion() const { return (this->_version); }
@@ -75,17 +90,14 @@ int Server::start_server() {
     serverPollFd.fd = server_socket_fd;
     serverPollFd.events = POLLIN;
     _sockets.push_back(serverPollFd);
-
     return (0);
 }
 
 int Server::run() {
     while (42) {
-        // std::cout << "Clients size: " << _clients.size() << std::endl;
         if (poll(_sockets.data(), _sockets.size(), -1) == -1) return (1);
         for (size_t i = 0; i < _sockets.size(); i++) {
             if (_sockets[i].revents & POLLIN) {
-                std::cout << "socket: " << _sockets[i].fd << std::endl;
                 if (_sockets[i].fd == _fd)
                     newClient();
                 else

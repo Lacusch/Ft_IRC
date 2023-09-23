@@ -1,5 +1,7 @@
 #include "../incl/Client.hpp"
 
+#include "../incl/Utils.hpp"
+
 Client::Client(int fd)
     : _fd(fd),
       _isAuthenticated(false),
@@ -10,7 +12,7 @@ Client::Client(int fd)
       _userName(""),
       _realName("") {}
 
-Client::~Client() {}
+Client::~Client() { Utils::print(R, "Client deleted"); }
 
 bool Client::isAuthenticated(void) const { return (_isAuthenticated); }
 

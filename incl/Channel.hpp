@@ -35,7 +35,9 @@ class Channel {
     bool setTopic(const std::string &topic);        // set the chann`l topic
     bool setPassword(const std::string &password);  // set the channel password
     bool setUserLimit(unsigned int limit);
-    void updateOpsListNick(std::string oldNick, std::string newNick); // updates the nickname of the operator that changes their nickname
+    void updateOpsListNick(
+        std::string oldNick,
+        std::string newNick);  // updates the nickname of the operator that changes their nickname
     void addToInvitedList(Client *client);
     void removeFromInvitedList(Client *client);
 

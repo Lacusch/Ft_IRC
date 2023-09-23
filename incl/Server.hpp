@@ -1,11 +1,12 @@
 #pragma once
 
+#include <fcntl.h>
+
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Request.hpp"
 #include "Responses.hpp"
 #include "Shared.hpp"
-#include <fcntl.h>
 
 class Server {
    private:
@@ -26,6 +27,7 @@ class Server {
     Server &operator=(const Server &rhs);
     ~Server();
 
+    void clean(void);
     // -----------------------
     // Getters
     // -----------------------
@@ -65,7 +67,6 @@ class Server {
     int handleChannelMode(int fd, Request req, Channel *ch);
     int handlePart(int fd, Request req);
     int handleQuit(int fd, Request req);
-
     int broadcastChannel(int fd, Request req, Channel *channel, Res res);
     int sendRegisteredUsers(int fd, Request req, Channel *channel);
     int broadcastQuitMsg(int fd, Channel *channel);
@@ -76,6 +77,5 @@ class Server {
     Res handleTopicMode(Request req, Channel *ch);
     Res handleOperatorMode(Client *target, Request req, Channel *ch);
     std::string create_response(int fd, Res res, Request req);
-
     void updateOpNickName(Client *client, std::string newNickName);
 };

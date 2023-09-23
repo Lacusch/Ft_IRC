@@ -18,8 +18,6 @@ Channel::~Channel() {}
 // ------------------------------------------------------------
 bool Channel::join(Client* client, int fd) {
     if (isMember(client, fd)) return (false);  // Client is already in the channel
-    // if (_members.size() >= _limit) return (false);  // Channel is full (Check not required here,
-    // should be done by the server)
 
     _members[fd] = client;  // Add the client to the list of members
 
@@ -35,17 +33,9 @@ bool Channel::join(Client* client, int fd) {
     return (true);
 }
 
-bool Channel::kick(Client* client, int fd) {
-    if (!isMember(client, fd)) return (false);  // Client is not in the channel
-    if (userIsChannelOp(client)) {
-        this->modifyOpsPrivileges(client, '-');
-    }
-    _members.erase(fd);  // Eject the client
-    return (true);
-}
-
 bool Channel::invite(Client* client, int fd) {
     if (isMember(client, fd)) return (false);  // Client is already in the channel
+    addToInvitedList(client);
     return (true);
 }
 
@@ -108,6 +98,16 @@ bool Channel::setUserLimit(unsigned int limit) {
     return (true);
 }
 
+void Channel::addToInvitedList(Client* client) {
+    _invitedList.push_back(client->getNickName());
+}
+
+void Channel::removeFromInvitedList(Client* client) {
+    _invitedList.erase(std::remove(_invitedList.begin(), _invitedList.end(), client->getNickName()),
+                       _invitedList.end());
+}
+
+
 // ------------------------------------------------------------
 //  Mode Setters
 // ------------------------------------------------------------
@@ -150,6 +150,18 @@ Client* Channel::getClientByNickName(std::map<int, Client*> clients, std::string
 
     return (NULL);
 }
+
+bool Channel::inInvitedList(Client* client) const {
+    std::vector<std::string> invitedList = _invitedList;
+    std::vector<std::string>::iterator it;
+
+    for (it = invitedList.begin(); it != invitedList.end(); ++it) {
+        if (*it == client->getNickName()) return (true);
+    }
+
+    return (false);
+}
+
 
 // ----------------------------------------------------------
 //  Utils

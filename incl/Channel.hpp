@@ -19,6 +19,7 @@ class Channel {
     State _passwordMode;
     std::map<int, Client *> _members;
     std::vector<std::string> _opsList;
+    std::vector<std::string> _invitedList;
 
    public:
     Channel(std::string &name, std::string &password);
@@ -26,7 +27,6 @@ class Channel {
 
     // Channel Methods
     bool join(Client *client, int fd);    // join the channel specified
-    bool kick(Client *client, int fd);    // kick a client from the channel
     bool invite(Client *client, int fd);  // invite a client to the channel
     bool leave(Client *client, int fd);   // leave the channel specified
     bool modifyOpsPrivileges(Client *target, char option);
@@ -35,9 +35,9 @@ class Channel {
     bool setTopic(const std::string &topic);        // set the chann`l topic
     bool setPassword(const std::string &password);  // set the channel password
     bool setUserLimit(unsigned int limit);
-    void updateOpsListNick(
-        std::string oldNick,
-        std::string newNick);  // updates the nickname of the operator that changes their nickname
+    void updateOpsListNick(std::string oldNick, std::string newNick); // updates the nickname of the operator that changes their nickname
+    void addToInvitedList(Client *client);
+    void removeFromInvitedList(Client *client);
 
     // Mode Setters
     void setTopicMode(State mode);
@@ -56,6 +56,7 @@ class Channel {
     Client *getClientByNickName(std::map<int, Client *> clients, std::string nickname) const;
     std::map<int, Client *> getMembersList(void) const;  // get the members of a channel
     std::vector<std::string> getOpsList(void) const;     // get the ops of a channel
+    bool inInvitedList(Client *client) const;
 
     // Utils
     bool isMember(Client *client, int fd) const;  // check if a client is a member of the channel

@@ -5,6 +5,7 @@
 #include "Request.hpp"
 #include "Responses.hpp"
 #include "Shared.hpp"
+#include <fcntl.h>
 
 class Server {
    private:

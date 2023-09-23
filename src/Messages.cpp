@@ -219,7 +219,7 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
     }
     Channel *ch = getChannel(channel);
     // TODO null case
-    if (!ch->isMember(_clients[fd], fd) && ch->isInviteOnly())
+    if (!ch->isMember(_clients[fd], fd) && ch->isInviteOnly() && !ch->inInvitedList(_clients[fd]))
         return (sendMessage(fd, ERR_INVITEONLYCHAN, request));
     if (ch->getPassword() != key && ch->getPasswordMode())
         return (sendMessage(fd, ERR_BADCHANNELKEY, request));
@@ -230,6 +230,7 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
         ch->setPassword(key);
         ch->setPasswordMode(on);
     }
+    ch->removeFromInvitedList(_clients[fd]);
     broadcastChannel(fd, request, ch, JOIN_CHANNEL);
     sendRegisteredUsers(fd, request, ch);
     return (0);
@@ -272,8 +273,6 @@ int Server::handleMode(int fd, Request req) {
     if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
 
     Channel *ch = _channels[channel_name];
-
-    // Check if the user is a channel operator
     if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
     return (this->handleChannelMode(fd, req, ch));
 }
@@ -423,8 +422,10 @@ int Server::handleKick(int fd, Request req) {
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));
 
     int targetFd = target->getFd();
+    if (!ch->isMember(target, targetFd)) return (sendMessage(fd, ERR_USERNOTINCHANNEL, req));
+    
     broadcastChannel(fd, req, ch, RPL_KICKED);
-    if (!ch->kick(target, targetFd)) return (sendMessage(fd, ERR_USERNOTINCHANNEL, req));
+    ch->leave(target, targetFd);
 
     return (0);
 }
@@ -450,12 +451,13 @@ int Server::handleInvite(int fd, Request req) {
 
     if (!target->isRegistered()) return (1);
 
-    int targetFd = target->getFd();
-    if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
-
     if (ch->getChannelSize() >= ch->getLimit()) return (sendMessage(fd, ERR_CHANNELISFULL, req));
     std::string response_msg = ":" + _clients[fd]->getNickName() + " INVITE " +
                                target->getNickName() + " #" + channel_name + "\r\n";
+
+    int targetFd = target->getFd();
+    if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
+
     send(targetFd, response_msg.c_str(), response_msg.size(), 0);
     Utils::print(G, response_msg);
     return (sendMessage(fd, RPL_INVITING, req));

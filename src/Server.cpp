@@ -14,6 +14,7 @@ Server::Server(std::string name, std::string version, std::string port, std::str
 
 Server::~Server() {
     for (size_t i = 0; i < _sockets.size(); i++) close(_sockets[i].fd);
+    std::cout << "destructor called" << std::endl;
 };
 
 std::string Server::getName() const { return (this->_name); }

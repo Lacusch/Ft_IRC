@@ -51,10 +51,13 @@ int Server::handleNickName(int fd, Request req) {
     }
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     updateOpNickName(_clients[fd], nickname);
-    std::map<int, Client *>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it) {
-        req.setReceiverFd(it->second->getFd());
-        if (it->second->isRegistered()) sendMessage(fd, NICKNAME_REGISTERED, req);
+    if (_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
+        _clients[fd]->hasNickname()) {
+        std::map<int, Client *>::iterator it;
+        for (it = _clients.begin(); it != _clients.end(); ++it) {
+            req.setReceiverFd(it->second->getFd());
+            if (it->second->isRegistered()) sendMessage(fd, NICKNAME_REGISTERED, req);
+        }
     }
     _clients[fd]->setNickName(nickname);
     _clients[fd]->setHasNickname(true);
@@ -64,8 +67,8 @@ int Server::handleNickName(int fd, Request req) {
         sendMessage(fd, RPL_YOURHOST, req);
         sendMessage(fd, RPL_CREATED, req);
         _clients[fd]->setWelcomeMessageDelivered(true);
-        return (0);
     }
+
     return (0);
 }
 
@@ -423,7 +426,7 @@ int Server::handleKick(int fd, Request req) {
 
     int targetFd = target->getFd();
     if (!ch->isMember(target, targetFd)) return (sendMessage(fd, ERR_USERNOTINCHANNEL, req));
-    
+
     broadcastChannel(fd, req, ch, RPL_KICKED);
     ch->leave(target, targetFd);
 

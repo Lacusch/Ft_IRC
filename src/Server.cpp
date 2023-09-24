@@ -1,6 +1,10 @@
 
 #include "../incl/Server.hpp"
 
+#include <sys/poll.h>
+
+#include <vector>
+
 #include "../incl/Channel.hpp"
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
@@ -18,18 +22,25 @@ Server::~Server() {
 };
 
 void Server::clean(void) {
-    for (size_t i = 0; i < _sockets.size(); i++) {
-        close(_sockets[i].fd);
+    // Close all sockets
+    for (std::vector<pollfd>::iterator it = _sockets.begin(); it != _sockets.end(); ++it) {
+        close(it->fd);
+        _sockets.erase(it);
     }
     // Delete all Client objects in the map
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         delete it->second;
+        _clients.erase(it);
     }
     // Delete all Channel objects in the map
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end();
          ++it) {
         delete it->second;
+        _channels.erase(it);
     }
+    _sockets = std::vector<pollfd>();
+    _channels = std::map<std::string, Channel*>();
+    _clients = std::map<int, Client*>();
 }
 
 std::string Server::getName() const { return (this->_name); }
@@ -120,9 +131,8 @@ int Server::newClient() {
         newClientPollFd.fd = newClientSocket;
         newClientPollFd.events = POLLIN;
         _sockets.push_back(newClientPollFd);
-        Client* client = new Client(newClientPollFd.fd);
         std::cout << "registering clientfd: " << newClientPollFd.fd << std::endl;
-        _clients[newClientPollFd.fd] = client;
+        _clients[newClientPollFd.fd] = new Client(newClientPollFd.fd);
     }
     return (0);
 }
@@ -132,9 +142,15 @@ int Server::clientMessage(int i) {
     ssize_t bytesRead = recv(_sockets[i].fd, buffer, sizeof(buffer), 0);
 
     if (bytesRead == 0) {
+        Utils::print(R, "Deleting user");
         close(_sockets[i].fd);
-        Utils::print(B, "Client disconnected");
-        delete _clients[_sockets[i].fd];
+        std::vector<pollfd>::iterator it_socket = _sockets.begin() + i;
+        _sockets.erase(it_socket);
+        std::map<int, Client*>::iterator it = _clients.find(_sockets[i].fd);
+        if (it != _clients.end()) {
+            delete it->second;
+            _clients.erase(it);
+        }
     } else if (bytesRead < 0)
         Utils::print(R, "Error: recv");
     else {

@@ -67,13 +67,10 @@ bool Channel::modifyOpsPrivileges(Client* target, char option) {
     return (true);
 }
 
-
 void Channel::updateOpsListNick(std::string oldNick, std::string newNick) {
-    _opsList.erase(std::remove(_opsList.begin(), _opsList.end(), oldNick),
-                       _opsList.end());
+    _opsList.erase(std::remove(_opsList.begin(), _opsList.end(), oldNick), _opsList.end());
     _opsList.push_back(newNick);
 }
-
 
 // ----------------------------------------------------------
 //  Setters
@@ -98,15 +95,12 @@ bool Channel::setUserLimit(unsigned int limit) {
     return (true);
 }
 
-void Channel::addToInvitedList(Client* client) {
-    _invitedList.push_back(client->getNickName());
-}
+void Channel::addToInvitedList(Client* client) { _invitedList.push_back(client->getNickName()); }
 
 void Channel::removeFromInvitedList(Client* client) {
     _invitedList.erase(std::remove(_invitedList.begin(), _invitedList.end(), client->getNickName()),
                        _invitedList.end());
 }
-
 
 // ------------------------------------------------------------
 //  Mode Setters
@@ -161,7 +155,6 @@ bool Channel::inInvitedList(Client* client) const {
 
     return (false);
 }
-
 
 // ----------------------------------------------------------
 //  Utils

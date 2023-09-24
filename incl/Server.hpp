@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fcntl.h>
-
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Request.hpp"

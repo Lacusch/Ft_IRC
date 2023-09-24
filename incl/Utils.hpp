@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Colors.hpp"
 #include "Errors.hpp"
 #include "Request.hpp"

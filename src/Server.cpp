@@ -1,10 +1,6 @@
 
 #include "../incl/Server.hpp"
 
-#include <sys/poll.h>
-
-#include <vector>
-
 #include "../incl/Channel.hpp"
 #include "../incl/Shared.hpp"
 #include "../incl/Utils.hpp"
@@ -25,18 +21,15 @@ void Server::clean(void) {
     // Close all sockets
     for (std::vector<pollfd>::iterator it = _sockets.begin(); it != _sockets.end(); ++it) {
         close(it->fd);
-        _sockets.erase(it);
     }
     // Delete all Client objects in the map
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         delete it->second;
-        _clients.erase(it);
     }
     // Delete all Channel objects in the map
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end();
          ++it) {
         delete it->second;
-        _channels.erase(it);
     }
     _sockets = std::vector<pollfd>();
     _channels = std::map<std::string, Channel*>();

@@ -11,6 +11,7 @@ void Utils::print(Color color, std::string str, bool new_line) {
     if (color == CGR) std::cout << CURSIVE << GRAY;
     if (color == CB) std::cout << CURSIVE << BLUE;
     if (color == CG) std::cout << CURSIVE << GREEN;
+    if (color == CR) std::cout << CURSIVE << RED;
     std::cout << str;
     if (new_line) std::cout << std::endl;
     std::cout << RESET;
@@ -26,7 +27,7 @@ int Utils::print_error(Error err) {
     if (err == BINDING_SOCKET) msg = "Error binding server socket";
     if (err == CONFIGURING_SOCKET) msg = "Error configuring server socket";
     if (err == LISTENING_SOCKET) msg = "Error listening server socket";
-    Utils::print(R, msg);
+    Utils::print(CR, msg);
     return (1);
 }
 

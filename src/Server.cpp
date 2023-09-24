@@ -10,19 +10,9 @@ Server::Server(std::string name, std::string version, std::string port, std::str
       _version(version),
       _creation_date(std::time(NULL)),
       _port(port),
-      _password(password) {
-    Utils::print(CGR, "--------------------");
-    Utils::print(CGR, "-- " + name);
-    Utils::print(CGR, "-- Welcome to IRC");
-    Utils::print(CGR, "-- port: " + port);
-    Utils::print(CGR, "-- version: " + version);
-    Utils::print(CGR, "-- timestamp: " + getCreationDate());
-};
+      _password(password){};
 
-Server::~Server() {
-    for (size_t i = 0; i < _sockets.size(); i++) close(_sockets[i].fd);
-    std::cout << "destructor called" << std::endl;
-};
+Server::~Server() { clean(); };
 
 void Server::clean(void) {
     // Close all sockets
@@ -47,9 +37,11 @@ std::string Server::getName() const { return (this->_name); }
 
 std::string Server::getVersion() const { return (this->_version); }
 
+std::string Server::getPort() const { return (this->_port); }
+
 std::string Server::getPassword() const { return (this->_password); }
 
-std::map<int, Client*> Server::getClientsList() const { return (_clients); }
+std::map<int, Client*> Server::getClientsList() const { return (this->_clients); }
 
 std::string Server::getCreationDate() const {
     std::string datetime = std::ctime(&_creation_date);
@@ -105,6 +97,13 @@ int Server::start_server() {
 }
 
 int Server::run() {
+    Utils::print(CGR, "--------------------");
+    Utils::print(CGR, "-- " + this->getName());
+    Utils::print(CGR, "-- Welcome to IRC");
+    Utils::print(CGR, "-- port: " + this->getPort());
+    Utils::print(CGR, "-- version: " + this->getPort());
+    Utils::print(CGR, "-- password: " + this->getPassword());
+    Utils::print(CGR, "-- timestamp: " + getCreationDate());
     while (42) {
         if (poll(_sockets.data(), _sockets.size(), -1) == -1) return (1);
         for (size_t i = 0; i < _sockets.size(); i++) {

@@ -31,6 +31,7 @@ class Server {
     // -----------------------
     std::string getName() const;
     std::string getVersion() const;
+    std::string getPort() const;
     std::string getCreationDate() const;
     std::string getPassword() const;
     int getFdFromNickName(std::string nickname);

@@ -17,5 +17,6 @@ enum Color {
     Y,    // yellow
     CGR,  // cursive gray
     CB,   // cursive blue
-    CG    // cursive green
+    CG,   // cursive green
+    CR    // cursive red
 };

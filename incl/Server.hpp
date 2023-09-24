@@ -38,10 +38,12 @@ class Server {
     std::map<int, Client *> getClientsList() const;
     Channel *getChannel(std::string channel_name) const;
 
+    void hello() const;
     int valid_args();
     int start_server();
     int run();
     int newClient();
+    int deleteUser(int i);
     int clientMessage(int i);
     int sendMessage(int fd, Res res, Request req);
     bool nickNameInUse(std::string nickname);

@@ -96,7 +96,7 @@ int Server::start_server() {
     return (0);
 }
 
-int Server::run() {
+void Server::hello() const {
     Utils::print(CGR, "--------------------");
     Utils::print(CGR, "-- " + this->getName());
     Utils::print(CGR, "-- Welcome to IRC");
@@ -104,8 +104,13 @@ int Server::run() {
     Utils::print(CGR, "-- version: " + this->getPort());
     Utils::print(CGR, "-- password: " + this->getPassword());
     Utils::print(CGR, "-- timestamp: " + getCreationDate());
-    while (42) {
-        if (poll(_sockets.data(), _sockets.size(), -1) == -1) return (1);
+}
+
+int Server::run() {
+    hello();
+    while (true) {
+        int poll_res = poll(_sockets.data(), _sockets.size(), -1);
+        if (poll_res == -1) return (1);
         for (size_t i = 0; i < _sockets.size(); i++) {
             if (_sockets[i].revents & POLLIN) {
                 if (_sockets[i].fd == _fd)
@@ -123,7 +128,7 @@ int Server::newClient() {
     socklen_t clientAddressLength = sizeof(clientAddress);
     int newClientSocket = accept(_fd, (struct sockaddr*)&clientAddress, &clientAddressLength);
     if (newClientSocket == -1) {
-        std::cerr << "Error accepting connection." << std::endl;
+        return (Utils::print_error(ACCEPTING_CONNECTION));
     } else {
         pollfd newClientPollFd;
         newClientPollFd.fd = newClientSocket;
@@ -135,74 +140,78 @@ int Server::newClient() {
     return (0);
 }
 
+int Server::deleteUser(int i) {
+    int fd = _sockets[i].fd;
+
+    Utils::print(CR, "deleting client FD: " + Utils::to_string(fd));
+    close(_sockets[i].fd);
+
+    std::vector<pollfd>::iterator it_socket = _sockets.begin() + i;
+    _sockets.erase(it_socket);
+
+    std::map<int, Client*>::iterator it = _clients.find(_sockets[i].fd);
+    if (it != _clients.end()) {
+        delete it->second;
+        _clients.erase(it);
+    };
+    return (0);
+}
+
 int Server::clientMessage(int i) {
     char buffer[1024];
     ssize_t bytesRead = recv(_sockets[i].fd, buffer, sizeof(buffer), 0);
 
+    int fd = _sockets[i].fd;
+
     if (bytesRead == 0) {
-        Utils::print(R, "Deleting user");
-        close(_sockets[i].fd);
-        std::vector<pollfd>::iterator it_socket = _sockets.begin() + i;
-        _sockets.erase(it_socket);
-        std::map<int, Client*>::iterator it = _clients.find(_sockets[i].fd);
-        if (it != _clients.end()) {
-            delete it->second;
-            _clients.erase(it);
-        }
+        deleteUser(i);
     } else if (bytesRead < 0)
-        Utils::print(R, "Error: recv");
+        return (Utils::print_error(READING_RECV));
     else {
-        int fd = _sockets[i].fd;
         std::string msg(buffer, bytesRead);
         _clients[fd]->msgBuffer += msg;
-        if (msg[msg.length() - 1] != '\n') {
-            return true;
-        }
+        if (msg[msg.length() - 1] != '\n') return true;
 
         Request req = Utils::parse_msg(fd, Utils::irc_trim(_clients[fd]->msgBuffer));
         req.setCommand(Utils::to_upper(req.getCommand()));
         _clients[fd]->msgBuffer.clear();
 
         Utils::print_req(req);
+        std::string cmd = req.getCommand();
 
-        if (req.getCommand().length() == 0) return (sendMessage(fd, UNKNWON_COMMAND, req));
-        if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
-        if (!_clients[_sockets[i].fd]->isAuthenticated()) {
-            std::string nickname = ":server 464 * :Please provide the server password\r\n";
-            return (send(_sockets[i].fd, nickname.c_str(), nickname.size(), 0));
-        }
-        if (req.getCommand() == "NICK") return (this->handleNickName(fd, req));
-        if (req.getCommand() == "USER") return (this->handleUser(fd, req));
-        if (!_clients[fd]->isRegistered() || !_clients[fd]->hasNickname()) {
-            std::string msg_register = ":mr:server.com 464 * :You must register before\r\n";
-            return (send(_sockets[i].fd, msg_register.c_str(), msg_register.size(), 0));
-        }
-        if (req.getCommand() == "PRIVMSG")
-            return (this->handlePrivateMsg(fd, req));
-        else if (req.getCommand() == "PING")
+        if (cmd.length() == 0) return (sendMessage(fd, UNKNWON_COMMAND, req));
+        if (cmd == "PASS") return (this->handlePassword(fd, req));
+        if (!_clients[fd]->isAuthenticated()) return (sendMessage(fd, PROVIDE_PASS, req));
+        if (cmd == "NICK") return (this->handleNickName(fd, req));
+        if (cmd == "USER") return (this->handleUser(fd, req));
+        if (!_clients[fd]->isRegistered() || !_clients[fd]->hasNickname())
+            return (sendMessage(fd, REGISTER_FIRST, req));
+        else if (cmd == "PING")
             return (this->handlePing(fd, req));
-        else if (req.getCommand() == "PONG")
+        else if (cmd == "PONG")
             return (true);
-        else if (req.getCommand() == "NOTICE")
+        else if (cmd == "NOTICE")
             return (true);
-        else if (req.getCommand() == "WHO")
+        else if (cmd == "WHO")
             return (this->handleWho(fd, req));
-        else if (req.getCommand() == "JOIN")
+        if (cmd == "PRIVMSG")
+            return (this->handlePrivateMsg(fd, req));
+        else if (cmd == "JOIN")
             return (this->handleJoinChannel(fd, req));
-        else if (req.getCommand() == "MODE")
+        else if (cmd == "MODE")
             return (this->handleMode(fd, req));
-        else if (req.getCommand() == "KICK")
+        else if (cmd == "KICK")
             return (this->handleKick(fd, req));
-        else if (req.getCommand() == "INVITE")
+        else if (cmd == "INVITE")
             return (this->handleInvite(fd, req));
-        else if (req.getCommand() == "TOPIC")
+        else if (cmd == "TOPIC")
             return (this->handleTopic(fd, req));
-        else if (req.getCommand() == "PART")
+        else if (cmd == "PART")
             return (this->handlePart(fd, req));
-        else if (req.getCommand() == "QUIT")
+        else if (cmd == "QUIT")
             return (this->handleQuit(fd, req));
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }
-    return (true);
+    return (0);
 }

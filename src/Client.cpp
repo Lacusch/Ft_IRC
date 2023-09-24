@@ -13,7 +13,7 @@ Client::Client(int fd)
       _userName(""),
       _realName("") {}
 
-Client::~Client() { Utils::print(R, "Client deleted"); }
+Client::~Client() { Utils::print(R, "Client deleted from destructor"); }
 
 bool Client::isAuthenticated(void) const { return (_isAuthenticated); }
 

@@ -29,6 +29,12 @@ std::string Server::create_response(int fd, Res res, Request req) {
     } else if (res == INCORRERCT_PASSWORD) {
         msg = ":" + this->getName() + " 464 " + client_recipient(client) +
               " :Incorrect password. Please try again\r\n";
+    } else if (res == PROVIDE_PASS) {
+        msg = ":" + this->getName() + " 464 " + client_recipient(client) +
+              " :Please provide the server password\r\n";
+    } else if (res == REGISTER_FIRST) {
+        msg = ":" + this->getName() + " 464 " + client_recipient(client) +
+              " :You must register before\r\n";
     } else if (res == NO_NICKNAME_GIVEN) {
         msg = ":" + this->getName() + " 432 " + client_recipient(client) +
               " <empty> :No nickname given\r\n";

@@ -8,7 +8,7 @@ int Server::sendMessage(int fd, Res res, Request req) {
     std::string response_msg = this->create_response(fd, res, req);
     sendFd = req.getReceiverFd();
     int res_status = send(sendFd, response_msg.c_str(), response_msg.size(), 0);
-    Utils::print(G, response_msg);
+    Utils::print_res(sendFd, Utils::irc_trim(response_msg));
     if (res_status == -1) Utils::print(R, "Error sending message");
     return (1);
 }

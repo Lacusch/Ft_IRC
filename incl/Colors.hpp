@@ -10,9 +10,12 @@
 #define CURSIVE "\e[33;3m"
 
 enum Color {
-    R,  // red
-    P,  // purple
-    G,  // green
-    B,  // blue
-    Y,  // yellow
+    R,    // red
+    P,    // purple
+    G,    // green
+    B,    // blue
+    Y,    // yellow
+    CGR,  // cursive gray
+    CB,   // cursive blue
+    CG    // cursive green
 };

@@ -8,6 +8,9 @@ void Utils::print(Color color, std::string str, bool new_line) {
     if (color == G) std::cout << GREEN;
     if (color == B) std::cout << BLUE;
     if (color == Y) std::cout << YELLOW;
+    if (color == CGR) std::cout << CURSIVE << GRAY;
+    if (color == CB) std::cout << CURSIVE << BLUE;
+    if (color == CG) std::cout << CURSIVE << GREEN;
     std::cout << str;
     if (new_line) std::cout << std::endl;
     std::cout << RESET;
@@ -89,6 +92,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
     if (prefix.length() != 0) {
         index = 2;
     }
+
     for (size_t i = index; i < tokens.size(); ++i) {
         if (tokens[i][0] == ':') {
             trailingExist = true;
@@ -96,6 +100,7 @@ Request Utils::parse_msg(int fd, std::string msg) {
         }
         clientRequest.setParams(tokens[i]);
     }
+
     if (trailingExist) {
         for (size_t i = 1; i < msg.length(); ++i) {
             if (msg[i] == ':' && !trailFound) {
@@ -135,33 +140,52 @@ bool Utils::isValidUnsignedInt(const std::string& str) {
     return (true);
 }
 
-bool Utils::isMultiParamValid(std::string str) {
-    if (str.empty()) return (false);
-    if (str[0] == ',' || str[str.length() - 1] == ',') return (false);
-    for (size_t i = 0; i < str.length(); ++i) {
-        if ((str[i] == ',' && str[++i] == ',')) return (false);
-        if (str[i] == ' ') return (false);
-    }
-    return true;
-}
-
 bool Utils::parse_join_msg(Request& req) {
     if (req.getParams().size() < 1) return (false);
+    if (req.getParams().size() > 2) return (false);
 
     std::vector<std::string> channels;
     std::vector<std::string> keys;
 
     std::string first = req.getParams()[0];
-    if (!isMultiParamValid(first)) return (false);
     channels = splitString(first, ',');
     if (channels.size() < 1) return (false);
 
     if (req.getParams().size() > 1) {
         std::string second = req.getParams()[1];
-        if (!isMultiParamValid(second)) return (false);
         keys = splitString(second, ',');
     }
 
     req.setJoinParams(channels, keys);
     return (true);
+}
+
+std::string Utils::to_string(int num) {
+    std::stringstream ss;
+    ss << num;
+    std::string string_val = ss.str();
+    return (string_val);
+}
+
+void Utils::print_req(Request req) {
+    Utils::print(CGR, "--------------------");
+    Utils::print(CGR, "timestamp: " + Utils::to_string(std::time(NULL)));
+    Utils::print(CGR, "req.fd: " + Utils::to_string(req.getFd()));
+    Utils::print(CGR, "req.command: " + req.getCommand());
+    if (req.getPrefix().size()) Utils::print(CGR, "req.prefix: " + req.getPrefix());
+    for (size_t i = 0; i < req.getParams().size(); i++) {
+        Utils::print(CGR, "req.param[" + Utils::to_string(i) + "]: " + req.getParams()[i]);
+    }
+    if (req.getTrailing().size()) Utils::print(CGR, "req.trailing: " + req.getTrailing());
+    Utils::print(CGR, "--------------------");
+    Utils::print(CGR, "");
+}
+
+void Utils::print_res(int fd, std::string res) {
+    Utils::print(CG, "--------------------");
+    Utils::print(CG, "timestamp: " + Utils::to_string(std::time(NULL)));
+    Utils::print(CG, "res.fd: " + Utils::to_string(fd));
+    Utils::print(CG, "res.message: " + res);
+    Utils::print(CG, "--------------------");
+    Utils::print(CGR, "");
 }

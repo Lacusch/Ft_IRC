@@ -10,7 +10,14 @@ Server::Server(std::string name, std::string version, std::string port, std::str
       _version(version),
       _creation_date(std::time(NULL)),
       _port(port),
-      _password(password){};
+      _password(password) {
+    Utils::print(CGR, "--------------------");
+    Utils::print(CGR, "-- " + name);
+    Utils::print(CGR, "-- Welcome to IRC");
+    Utils::print(CGR, "-- port: " + port);
+    Utils::print(CGR, "-- version: " + version);
+    Utils::print(CGR, "-- timestamp: " + getCreationDate());
+};
 
 Server::~Server() {
     for (size_t i = 0; i < _sockets.size(); i++) close(_sockets[i].fd);
@@ -119,12 +126,11 @@ int Server::newClient() {
     if (newClientSocket == -1) {
         std::cerr << "Error accepting connection." << std::endl;
     } else {
-        std::cout << "New client connected." << std::endl;
         pollfd newClientPollFd;
         newClientPollFd.fd = newClientSocket;
         newClientPollFd.events = POLLIN;
         _sockets.push_back(newClientPollFd);
-        std::cout << "registering clientfd: " << newClientPollFd.fd << std::endl;
+        Utils::print(CB, "client connected on FD: " + Utils::to_string(newClientPollFd.fd) + "\n");
         _clients[newClientPollFd.fd] = new Client(newClientPollFd.fd);
     }
     return (0);
@@ -153,10 +159,12 @@ int Server::clientMessage(int i) {
         if (msg[msg.length() - 1] != '\n') {
             return true;
         }
-        Utils::print(P, _clients[fd]->msgBuffer);
+
         Request req = Utils::parse_msg(fd, Utils::irc_trim(_clients[fd]->msgBuffer));
         req.setCommand(Utils::to_upper(req.getCommand()));
         _clients[fd]->msgBuffer.clear();
+
+        Utils::print_req(req);
 
         if (req.getCommand().length() == 0) return (sendMessage(fd, UNKNWON_COMMAND, req));
         if (req.getCommand() == "PASS") return (this->handlePassword(fd, req));
@@ -198,31 +206,4 @@ int Server::clientMessage(int i) {
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }
     return (true);
-}
-
-bool Server::nickNameInUse(std::string nickname) {
-    std::map<int, Client*>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it) {
-        Client* client = it->second;
-        if (Utils::to_upper(client->getNickName()) == Utils::to_upper(nickname)) return (true);
-    }
-    return (false);
-}
-
-bool Server::channelExists(std::string channel_name) {
-    std::map<std::string, Channel*>::iterator it;
-    for (it = _channels.begin(); it != _channels.end(); ++it) {
-        Channel* channel = it->second;
-        if (Utils::to_upper(channel->getName()) == Utils::to_upper(channel_name)) return (true);
-    }
-    return (false);
-}
-
-int Server::getFdFromNickName(std::string nickname) {
-    std::map<int, Client*>::iterator it;
-    for (it = _clients.begin(); it != _clients.end(); ++it) {
-        Client* client = it->second;
-        if (client->getNickName() == nickname) return (client->getFd());
-    }
-    return (-1);
 }

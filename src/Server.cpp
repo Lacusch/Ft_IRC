@@ -28,6 +28,11 @@ void Server::clean(void) {
          ++it) {
         delete it->second;
     }
+
+    _sockets.clear();
+    _client.clear();
+    _channels.clear();
+
     _sockets = std::vector<pollfd>();
     _channels = std::map<std::string, Channel*>();
     _clients = std::map<int, Client*>();

@@ -5,6 +5,7 @@
 #include "Request.hpp"
 #include "Responses.hpp"
 #include "Shared.hpp"
+#include "Bot.hpp"
 
 class Server {
    private:
@@ -67,7 +68,7 @@ class Server {
     int handleTopic(int fd, Request req);
     int handleChannelMode(int fd, Request req, Channel *ch);
     int handlePart(int fd, Request req);
-    int handleQuit(int fd, Request req);
+    int handleQuit(int fd);
     int broadcastChannel(int fd, Request req, Channel *channel, Res res);
     int sendRegisteredUsers(int fd, Request req, Channel *channel);
     int broadcastQuitMsg(int fd, Channel *channel);
@@ -79,4 +80,7 @@ class Server {
     Res handleOperatorMode(Client *target, Request req, Channel *ch);
     std::string create_response(int fd, Res res, Request req);
     void updateOpNickName(Client *client, std::string newNickName);
+
+    int handleRollDie(int fd, Request req);
+
 };

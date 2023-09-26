@@ -146,8 +146,10 @@ int Server::deleteUser(int i) {
     Utils::print(CR, "deleting client FD: " + Utils::to_string(fd));
     close(_sockets[i].fd);
 
-    std::vector<pollfd>::iterator it_socket = _sockets.begin() + i;
-    _sockets.erase(it_socket);
+    // std::vector<pollfd>::iterator it_socket = _sockets.begin() + i;
+    // _sockets.erase(it_socket);
+
+    handleQuit(fd);
 
     std::map<int, Client*>::iterator it = _clients.find(_sockets[i].fd);
     if (it != _clients.end()) {
@@ -169,12 +171,12 @@ int Server::clientMessage(int i) {
         return (Utils::print_error(READING_RECV));
     else {
         std::string msg(buffer, bytesRead);
-        _clients[fd]->msgBuffer += msg;
+        _clients[fd]->setMsg(msg);
         if (msg[msg.length() - 1] != '\n') return true;
 
-        Request req = Utils::parse_msg(fd, Utils::irc_trim(_clients[fd]->msgBuffer));
+        Request req = Utils::parse_msg(fd, Utils::irc_trim(_clients[fd]->getMsg()));
         req.setCommand(Utils::to_upper(req.getCommand()));
-        _clients[fd]->msgBuffer.clear();
+        _clients[fd]->clearMsg();
 
         Utils::print_req(req);
         std::string cmd = req.getCommand();
@@ -194,7 +196,7 @@ int Server::clientMessage(int i) {
             return (true);
         else if (cmd == "WHO")
             return (this->handleWho(fd, req));
-        if (cmd == "PRIVMSG")
+        else if (cmd == "PRIVMSG")
             return (this->handlePrivateMsg(fd, req));
         else if (cmd == "JOIN")
             return (this->handleJoinChannel(fd, req));
@@ -209,7 +211,9 @@ int Server::clientMessage(int i) {
         else if (cmd == "PART")
             return (this->handlePart(fd, req));
         else if (cmd == "QUIT")
-            return (this->handleQuit(fd, req));
+            return (this->handleQuit(fd));
+        else if (cmd == "ROLL")
+            return (this->handleRollDie(fd, req));
         else
             return (sendMessage(fd, UNKNWON_COMMAND, req));
     }

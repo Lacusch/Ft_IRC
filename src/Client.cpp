@@ -11,7 +11,8 @@ Client::Client(int fd)
       _welcomeMessageDelivered(false),
       _nickName(""),
       _userName(""),
-      _realName("") {}
+      _realName(""),
+      _msgBuffer("") {}
 
 Client::~Client() { Utils::print(R, "Client deleted from destructor"); }
 
@@ -42,3 +43,9 @@ int Client::getFd(void) const { return (_fd); }
 bool Client::getWelcomeMessageDelivered(void) const { return (_welcomeMessageDelivered); }
 
 void Client::setNickName(std::string nickname) { _nickName = nickname; }
+
+void Client::setMsg(std::string msg) { _msgBuffer.append(msg); }
+
+std::string Client::getMsg(void) const { return (_msgBuffer); }
+
+void Client::clearMsg(void) { _msgBuffer.clear(); }

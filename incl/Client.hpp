@@ -3,7 +3,7 @@
 #include "Shared.hpp"
 
 class Client {
-   private:
+   protected:
     int _fd;
     bool _isAuthenticated;
     bool _isRegistered;
@@ -12,14 +12,17 @@ class Client {
     std::string _nickName;
     std::string _userName;
     std::string _realName;
+    std::string _msgBuffer;
 
    public:
     Client(int fd);
     Client(const Client &rhs);
     Client &operator=(const Client &rhs);
-    ~Client();
+    virtual ~Client();
 
-    std::string msgBuffer;
+    void setMsg(std::string msg);
+    std::string getMsg(void) const;
+    void clearMsg(void);
 
     bool isAuthenticated(void) const;
     bool isRegistered(void) const;

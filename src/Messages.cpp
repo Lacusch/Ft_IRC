@@ -49,6 +49,7 @@ int Server::handleNickName(int fd, Request req) {
               nickname[i] == '|'))
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
+    if (nickname == BOT_NICKNAME) return (sendMessage(fd, ERR_NICKNAME_FOR_BOT, req));
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     updateOpNickName(_clients[fd], nickname);
     if (_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
@@ -373,34 +374,34 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
 
     if (mode[0] != '+' && mode[0] != '-') return (sendMessage(fd, ERR_UNKNOWNMODE, req));
 
-    mode = Utils::to_upper(mode);
     Res response;
 
     Client *target = NULL;
     switch (mode[1]) {
-        case 'O':
+        case 'o':
             if (req.getParams()[2].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             target = ch->getClientByNickName(this->getClientsList(), req.getParams()[2]);
             if (target == NULL && req.getParams().size() == 3)
                 return (sendMessage(fd, ERR_NOSUCHNICK, req));
             response = handleOperatorMode(target, req, ch);
             break;
-        case 'K':
+        case 'k':
             response = handleKeyMode(req, ch);
             break;
-        case 'L':
+        case 'l':
             response = handleUserLimitMode(req, ch);
             break;
-        case 'T':
+        case 't':
             response = handleTopicMode(req, ch);
             break;
-        case 'I':
+        case 'i':
             response = handleInviteOnlyMode(req, ch);
             break;
         default:
             response = ERR_UNKNOWNMODE;
             break;
     }
+    if (response != RPL_CHANNELMODEIS) return (sendMessage(fd, response, req));
     return (broadcastChannel(fd, req, ch, response));
 }
 
@@ -511,8 +512,7 @@ int Server::handlePart(int fd, Request req) {
     return (sendMessage(fd, RPL_PARTED, req));
 }
 
-int Server::handleQuit(int fd, Request req) {
-    (void)req;
+int Server::handleQuit(int fd) {
 
     for (std::map<std::string, Channel *>::iterator it = this->_channels.begin();
          it != this->_channels.end(); ++it) {
@@ -520,6 +520,24 @@ int Server::handleQuit(int fd, Request req) {
             broadcastQuitMsg(fd, it->second);
             it->second->leave(_clients[fd], fd);
         }
+    }
+    return (0);
+}
+
+int Server::handleRollDie(int fd, Request req) {
+    if (req.getParams().size() != 1) return (sendMessage(fd, BOT_USAGE, req));
+
+    std::string clientInput = req.getParams()[0];
+    unsigned int sides = static_cast<unsigned int>(std::atoi(clientInput.c_str()));
+    if (!Utils::isValidUnsignedInt(clientInput)) return (sendMessage(fd, BOT_USAGE, req));
+    else if (sides < DIE_MIN || sides > DIE_MAX) return (sendMessage(fd, BOT_USAGE, req));
+    else {
+        Bot rollDieBot(-1);
+        std::string clientRoll = rollDieBot.rollDie(sides);
+        std::string response_msg = ":" + rollDieBot.getNickName() + "!" + rollDieBot.getUserName() + "@127.0.0.1" +
+        " PRIVMSG " + _clients[fd]->getNickName() + " :You have rolled  " + clientRoll + "\r\n";
+        send(fd, response_msg.c_str(), response_msg.size(), 0);
+        Utils::print(G, response_msg);
     }
     return (0);
 }

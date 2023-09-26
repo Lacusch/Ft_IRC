@@ -30,7 +30,7 @@ void Server::clean(void) {
     }
 
     _sockets.clear();
-    _client.clear();
+    _clients.clear();
     _channels.clear();
 
     _sockets = std::vector<pollfd>();

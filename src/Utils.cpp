@@ -23,6 +23,7 @@ int Utils::print_error(Error err) {
     if (err == EMPTY_ARGS) msg = "Error: empty arguments";
     if (err == NUMERIC_PORT) msg = "Error: port number must be int";
     if (err == PORT_RANGE) msg = "Error: please use IRC ports: 6665-6669";
+    if (err == PASS_TOO_LONG) msg = "Error: password length should be 50 characters or less";
     if (err == CREATING_SOCKET) msg = "Error creating server socket";
     if (err == BINDING_SOCKET) msg = "Error binding server socket";
     if (err == CONFIGURING_SOCKET) msg = "Error configuring server socket";

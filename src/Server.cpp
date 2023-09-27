@@ -63,6 +63,7 @@ int Server::valid_args() {
     }
     if (port_int > 6669 || port_int < 6665) return (Utils::print_error(PORT_RANGE));
     _iport = port_int;
+    if (_password.length() > 50) return (Utils::print_error(PASS_TOO_LONG));
     return (0);
 };
 

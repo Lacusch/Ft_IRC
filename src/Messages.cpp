@@ -255,7 +255,6 @@ int Server::handleMode(int fd, Request req) {
         bool topiChangeForOperators = !channel->getTopicMode();
         std::string mode_msg = ":" + this->getName() + " MODE " + "#" + channel_name + " " +
                                (topiChangeForOperators ? "+t" : "-t") + "\r\n";
-        Utils::print(G, mode_msg);
         if (!topic.empty()) {
             req.setTrailing(topic);
             (sendMessage(fd, TOPIC_SET, req));

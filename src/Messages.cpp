@@ -50,7 +50,7 @@ int Server::handleNickName(int fd, Request req) {
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
     if (nickname.length() > 10) return (sendMessage(fd, ERR_NICKNAME_TOO_LONG, req));
-    if (nickname == BOT_NICKNAME) return (sendMessage(fd, ERR_NICKNAME_FOR_BOT, req));
+    if (Utils::to_lower(nickname) == Utils::to_lower(BOT_NICKNAME)) return (sendMessage(fd, ERR_NICKNAME_FOR_BOT, req));
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     updateOpNickName(_clients[fd], nickname);
     if (_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
@@ -292,7 +292,6 @@ int Server::handleMode(int fd, Request req) {
 
 Res Server::handleOperatorMode(Client *target, Request req, Channel *ch) {
     std::string mode = req.getParams()[1];
-    if (req.getParams().size() != 3) return (NOT_ENOUGH_PARAMS);
 
     if (mode[0] == '+') {
         if (ch->userIsChannelOp(target)) return (ERR_USERSDONTMATCH);
@@ -388,6 +387,7 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
     Client *target = NULL;
     switch (mode[1]) {
         case 'o':
+            if (req.getParams().size() != 3) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             if (req.getParams()[2].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             target = ch->getClientByNickName(this->getClientsList(), req.getParams()[2]);
             if (target == NULL && req.getParams().size() == 3)

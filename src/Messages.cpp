@@ -49,6 +49,7 @@ int Server::handleNickName(int fd, Request req) {
               nickname[i] == '|'))
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
+    if (nickname.length() > 10) return (sendMessage(fd, ERR_NICKNAME_TOO_LONG, req));
     if (nickname == BOT_NICKNAME) return (sendMessage(fd, ERR_NICKNAME_FOR_BOT, req));
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     updateOpNickName(_clients[fd], nickname);
@@ -81,6 +82,15 @@ int Server::handleUser(int fd, Request req) {
     if (totalParams < 4) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (totalParams > 4) return (sendMessage(fd, ENOUGH_PARAMS, req));
     if (_clients[fd]->isRegistered()) return (sendMessage(fd, USER_ALREADY_REGISTERED, req));
+
+    if (req.getParams()[0].length() > 20) return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
+    if (req.getParams()[1].length() > 20) return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
+    if (req.getParams()[2].length() > 20) return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
+    if (hasTrailing && req.getTrailing().length() > 20)
+        return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
+    else if (req.getParams()[3].length() > 20)
+        return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
+
     _clients[fd]->setRegistration(true);
     _clients[fd]->setUsername(req.getParams()[0]);
     if (hasTrailing)
@@ -220,7 +230,7 @@ int Server::handleSingleChannel(int fd, Request req, std::string channel, std::s
         _channels[channel] = general;
     }
     Channel *ch = getChannel(channel);
-    // TODO null case
+    if (!ch) return (sendMessage(fd, ERR_NOSUCHCHANNEL, request));
     if (!ch->isMember(_clients[fd], fd) && ch->isInviteOnly() && !ch->inInvitedList(_clients[fd]))
         return (sendMessage(fd, ERR_INVITEONLYCHAN, request));
     if (ch->getPassword() != key && ch->getPasswordMode())
@@ -447,7 +457,7 @@ int Server::handleInvite(int fd, Request req) {
     if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
 
     if (!ch->userIsChannelOp(_clients[fd]) && ch->isInviteOnly())
-        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
+        return (sendMessage(fd, ERR_CHANOPRIVSNEEDED_INVITE, req));
 
     Client *target = ch->getClientByNickName(this->getClientsList(), req.getParams()[0]);
     if (target == NULL) return (sendMessage(fd, ERR_NOSUCHNICK, req));

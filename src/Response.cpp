@@ -129,6 +129,12 @@ std::string Server::create_response(int fd, Res res, Request req) {
             msg = ":" + this->getName() + " 482 " + client_recipient(client) + " " +
                   req.getParams()[0] + " :You're not channel operator" + "\r\n";
             break;
+        case ERR_CHANOPRIVSNEEDED_INVITE:
+            msg = ":" + this->getName() + " 482 " + client_recipient(client) + " " +
+                  (req.getParams().size() > 1 && req.getParams()[1][0] == '#' ? req.getParams()[1]
+                                                                              : "") +
+                  " :You're not channel operator" + "\r\n";
+            break;
         case ERR_NOTREGISTERED:
             msg = ":" + this->getName() + " 451 " + client_recipient(client) +
                   " :You have not registered\r\n";
@@ -201,6 +207,14 @@ std::string Server::create_response(int fd, Res res, Request req) {
             msg = ":" + this->getName() + " 433 " + client_recipient(client) +
                   (req.getParams().size() ? " " + req.getParams()[0] : "") +
                   " :Cannot use nickname, it is in use by BOT \r\n";
+            break;
+        case ERR_NICKNAME_TOO_LONG:
+            msg = ":" + this->getName() + " 437 " + client_recipient(client) + " " +
+                  req.getParams()[0] + " :Nickname length should be less than 10 characters\r\n";
+            break;
+        case ERR_USERNAME_TOO_LONG:
+            msg = ":" + this->getName() + " 437 " + client_recipient(client) + " " +
+                  "<user_param>" + " :param length should be less than 20 characters each\r\n";
             break;
         case BOT_USAGE:
             msg = ":" + this->getName() + " 461 " + client_recipient(client) +

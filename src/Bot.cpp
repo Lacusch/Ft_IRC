@@ -6,9 +6,7 @@ Bot::Bot(int fd) : Client(fd) {
     this->_realName = BOT_REALNAME;
 }
 
-Bot::~Bot() {
-    Utils::print(Y, this->_realName + " destroyed");
-}
+Bot::~Bot() { Utils::print(CR, this->_realName + " destroyed"); }
 
 std::string Bot::rollDie(unsigned int sides) {
     std::srand(static_cast<unsigned>(std::time(NULL)));

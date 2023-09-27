@@ -54,8 +54,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
             break;
         case ERR_CHANNELNAME_LENGTH:
             msg = ":" + this->getName() + " 401 " + client_recipient(client) +
-                " <channel_name>  : Channel length should be less than 200 chars" +
-                "\r\n";
+                  " <channel_name>  : Channel length should be less than 200 chars" + "\r\n";
             break;
         case NICKNAME_IN_USE:
             msg = ":" + this->getName() + " 433 " + client_recipient(client) +
@@ -81,8 +80,9 @@ std::string Server::create_response(int fd, Res res, Request req) {
                   " NICK " + req.getParams()[0] + "\r\n";
             break;
         case SEND_PRIVATE_MESSAGE:
-            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() + "@127.0.0.1" +
-                  " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
+            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
+                  "@127.0.0.1" + " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() +
+                  "\r\n";
             break;
         case UNKNWON_COMMAND:
             msg = ":" + this->getName() + " 421 " + client_recipient(client) + " " +
@@ -102,7 +102,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
             break;
         case JOIN_CHANNEL:
             msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
-                "@127.0.0.1 " + "JOIN " + req.getParams()[0] + "\r\n";
+                  "@127.0.0.1 " + "JOIN " + req.getParams()[0] + "\r\n";
             break;
         case BAD_CHANNEL_STRUCTURE:
             msg = ":" + this->getName() + " 401 " + client_recipient(client) + " " +
@@ -136,17 +136,16 @@ std::string Server::create_response(int fd, Res res, Request req) {
         case RPL_CHANNELMODEIS:
             msg = ":" + this->getName() + " MODE " +
                   (req.getParams().size() == 2
-                  ? req.getParams()[0] + " " + req.getParams()[1]
-                  : req.getParams()[0] + " " + req.getParams()[1] + " " + req.getParams()[2]) + "\r\n";
+                       ? req.getParams()[0] + " " + req.getParams()[1]
+                       : req.getParams()[0] + " " + req.getParams()[1] + " " + req.getParams()[2]) +
+                  "\r\n";
             break;
         case ERR_NOTONCHANNEL:
             msg = ":" + this->getName() + " 442 " +
-                (req.getParams()[0][0] == '#'
-                ? req.getParams()[0]
-                : req.getParams().size() > 1
-                ? req.getParams()[1]
-                : "") +
-                " :You're not on that channel" + "\r\n";
+                  (req.getParams()[0][0] == '#' ? req.getParams()[0]
+                   : req.getParams().size() > 1 ? req.getParams()[1]
+                                                : "") +
+                  " :You're not on that channel" + "\r\n";
             break;
         case RPL_KICKED:
             msg = "KICK " + req.getParams()[0] + " " + req.getParams()[1] + " :" +
@@ -154,7 +153,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
             break;
         case ERR_USERONCHANNEL:
             msg = ":" + this->getName() + " 443 " + client_recipient(client) + " " +
-                  client_recipient(client) + ": channel " + "\r\n";
+                  req.getParams()[0] + ": channel " + "\r\n";
             break;
         case RPL_INVITING:
             msg = ":" + this->getName() + " 341 " + client_recipient(client) + " " +
@@ -189,29 +188,30 @@ std::string Server::create_response(int fd, Res res, Request req) {
             break;
         case ERR_NOSUCHCHANNEL:
             msg = ":" + this->getName() + " 403 " + client_recipient(client) + " " +
-                  (req.getParams()[0][0] == '#'
-                  ? req.getParams()[0]
-                  : req.getParams().size() > 1
-                  ? req.getParams()[1]
-                  : "") +
+                  (req.getParams()[0][0] == '#' ? req.getParams()[0]
+                   : req.getParams().size() > 1 ? req.getParams()[1]
+                                                : "") +
                   " :No such channel" + "\r\n";
             break;
         case RPL_PARTED:
-            msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " + " PART " +
-                  req.getParams()[0] + " :Leaving the channel" + "\r\n";
+            msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " +
+                  " PART " + req.getParams()[0] + " :Leaving the channel" + "\r\n";
             break;
         case ERR_NICKNAME_FOR_BOT:
             msg = ":" + this->getName() + " 433 " + client_recipient(client) +
-            (req.getParams().size() ? " " + req.getParams()[0] : "") +
-            " :Cannot use nickname, it is in use by BOT \r\n";
+                  (req.getParams().size() ? " " + req.getParams()[0] : "") +
+                  " :Cannot use nickname, it is in use by BOT \r\n";
             break;
         case BOT_USAGE:
             msg = ":" + this->getName() + " 461 " + client_recipient(client) +
-            " : Usage: <ROLL> <die_number_of_sides> ( min 2, max 10 )\r\n";
+                  " : Usage: <ROLL> <die_number_of_sides> ( min 2, max 10 )\r\n";
+            break;
+        case PONG_RESPONSE:
+            msg = "PONG " + req.getTrailing() + "\r\n";
             break;
         default:
             msg = ":" + this->getName() + " 421 " + client_recipient(client) + " :Unknown command" +
-            "\r\n";
+                  "\r\n";
             break;
     }
     return (msg);

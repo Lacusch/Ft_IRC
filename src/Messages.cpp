@@ -109,8 +109,7 @@ int Server::handlePrivateMsg(int fd, Request req) {
 }
 
 int Server::handlePing(int fd, Request req) {
-    (void)req;
-    (void)fd;
+    sendMessage(fd, PONG_RESPONSE, req);
     return (0);
 }
 
@@ -156,11 +155,10 @@ int Server::broadcastQuitMsg(int fd, Channel *channel) {
         quittedClientNick = _clients[fd]->getNickName();
         quittedClientName = _clients[fd]->getUserName();
         std::string quitMsg;
-
         quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@127.0.0.1 " + " PART #" +
                   channel->getName() + " :Quitted" + "\r\n";
-        Utils::print(G, quitMsg);
         send(idx_member->getFd(), quitMsg.c_str(), quitMsg.size(), 0);
+        Utils::print_res(idx_member->getFd(), Utils::irc_trim(quitMsg));
     };
     return (0);
 }
@@ -172,14 +170,14 @@ int Server::sendRegisteredUsers(int fd, Request req, Channel *channel) {
         Client *idx_member = it->second;
         std::string msg = ":" + this->getName() + " 353 " + idx_member->getNickName() + " = " +
                           req.getParams()[0] + " :" + idx_member->getNickName() + "\r\n";
-        Utils::print(G, msg);
         send(fd, msg.c_str(), msg.size(), 0);
+        Utils::print_res(fd, Utils::irc_trim(msg));
     };
     if (members.size() > 1) {
         std::string end_list = ":" + this->getName() + " 366 " + _clients[fd]->getNickName() +
                                " #" + channel->getName() + " :End of NAMES list\r\n";
-        Utils::print(G, end_list);
         send(fd, end_list.c_str(), end_list.size(), 0);
+        Utils::print_res(fd, Utils::irc_trim(end_list));
     }
     return (0);
 }
@@ -244,13 +242,14 @@ int Server::handleMode(int fd, Request req) {
     std::vector<std::string> params = req.getParams();
     if (params.size() == 1) {
         std::string channel_name = Utils::to_lower(params[0].substr(1));
+        if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
         Channel *channel = _channels[channel_name];
         std::vector<std::string> OpsList = channel->getOpsList();
         for (std::vector<std::string>::iterator it = OpsList.begin(); it != OpsList.end(); ++it) {
             std::string msg =
                 ":" + this->getName() + " MODE " + "#" + channel_name + " +o " + *it + "\r\n";
-            Utils::print(G, msg);
             send(fd, msg.c_str(), msg.size(), 0);
+            Utils::print_res(fd, Utils::irc_trim(msg));
         }
         std::string topic = channel->getTopic();
         bool topiChangeForOperators = !channel->getTopicMode();
@@ -262,6 +261,7 @@ int Server::handleMode(int fd, Request req) {
             (sendMessage(fd, TOPIC_SET, req));
         }
         send(fd, mode_msg.c_str(), mode_msg.size(), 0);
+        Utils::print_res(fd, Utils::irc_trim(mode_msg));
         return (0);
     }
     if (req.getParams().size() == 2) {
@@ -463,7 +463,7 @@ int Server::handleInvite(int fd, Request req) {
     if (!ch->invite(target, targetFd)) return (sendMessage(fd, ERR_USERONCHANNEL, req));
 
     send(targetFd, response_msg.c_str(), response_msg.size(), 0);
-    Utils::print(G, response_msg);
+    Utils::print_res(targetFd, Utils::irc_trim(response_msg));
     return (sendMessage(fd, RPL_INVITING, req));
 }
 
@@ -513,7 +513,6 @@ int Server::handlePart(int fd, Request req) {
 }
 
 int Server::handleQuit(int fd) {
-
     for (std::map<std::string, Channel *>::iterator it = this->_channels.begin();
          it != this->_channels.end(); ++it) {
         if (it->second->isMember(_clients[fd], fd)) {
@@ -529,15 +528,18 @@ int Server::handleRollDie(int fd, Request req) {
 
     std::string clientInput = req.getParams()[0];
     unsigned int sides = static_cast<unsigned int>(std::atoi(clientInput.c_str()));
-    if (!Utils::isValidUnsignedInt(clientInput)) return (sendMessage(fd, BOT_USAGE, req));
-    else if (sides < DIE_MIN || sides > DIE_MAX) return (sendMessage(fd, BOT_USAGE, req));
+    if (!Utils::isValidUnsignedInt(clientInput))
+        return (sendMessage(fd, BOT_USAGE, req));
+    else if (sides < DIE_MIN || sides > DIE_MAX)
+        return (sendMessage(fd, BOT_USAGE, req));
     else {
         Bot rollDieBot(-1);
         std::string clientRoll = rollDieBot.rollDie(sides);
-        std::string response_msg = ":" + rollDieBot.getNickName() + "!" + rollDieBot.getUserName() + "@127.0.0.1" +
-        " PRIVMSG " + _clients[fd]->getNickName() + " :You have rolled  " + clientRoll + "\r\n";
+        std::string response_msg = ":" + rollDieBot.getNickName() + "!" + rollDieBot.getUserName() +
+                                   "@127.0.0.1" + " PRIVMSG " + _clients[fd]->getNickName() +
+                                   " :You have rolled  " + clientRoll + "\r\n";
         send(fd, response_msg.c_str(), response_msg.size(), 0);
-        Utils::print(G, response_msg);
+        Utils::print_res(fd, Utils::irc_trim(response_msg));
     }
     return (0);
 }

@@ -213,15 +213,6 @@ int Server::handleJoinChannel(int fd, Request req) {
     return (0);
 }
 
-Channel *Server::getChannel(std::string channel_name) const {
-    std::map<std::string, Channel *>::iterator it;
-    std::map<std::string, Channel *> channels = _channels;
-    for (it = channels.begin(); it != channels.end(); ++it) {
-        if (Utils::to_upper(channel_name) == Utils::to_upper(it->first)) return (it->second);
-    }
-    return (NULL);
-}
-
 int Server::handleSingleChannel(int fd, Request req, std::string channel, std::string key) {
     Request request;
     request.setCommand(req.getCommand());

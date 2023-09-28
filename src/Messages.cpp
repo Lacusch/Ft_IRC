@@ -115,7 +115,11 @@ int Server::handlePrivateMsg(int fd, Request req) {
     if (req.getParams().size() == 0) return (sendMessage(fd, ERR_NORECIPIENT, req));
     if (req.getTrailing().size() == 0) return (sendMessage(fd, NO_TEXT_TO_SEND, req));
     int recipient_fd = this->getFdFromNickName(req.getParams()[0]);
-    if (recipient_fd == -1 && req.getParams()[0][0] == '#') return (handleChannelMessage(fd, req));
+    if (recipient_fd == -1 && req.getParams()[0][0] == '#') {
+        std::string channel_name = Utils::to_lower(req.getParams()[0]);
+        if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
+        return (handleChannelMessage(fd, req));
+    }
     if (recipient_fd == -1) return (sendMessage(fd, ERR_NOSUCHNICK, req));
     req.setReceiverFd(recipient_fd);
     sendMessage(fd, SEND_PRIVATE_MESSAGE, req);

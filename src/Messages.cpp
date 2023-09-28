@@ -120,7 +120,6 @@ int Server::handlePrivateMsg(int fd, Request req) {
         Channel *ch = getChannel(channel_name);
         if (ch == NULL) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
         if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
-        if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
         return (handleChannelMessage(fd, req));
     }
     if (recipient_fd == -1) return (sendMessage(fd, ERR_NOSUCHNICK, req));

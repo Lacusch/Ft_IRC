@@ -29,6 +29,7 @@ int Utils::print_error(Error err) {
     if (err == CONFIGURING_SOCKET) msg = "Error configuring server socket";
     if (err == LISTENING_SOCKET) msg = "Error listening server socket";
     if (err == ACCEPTING_CONNECTION) msg = "Error accepting connection";
+    if (err == FCNTL_ERROR) msg = "Error making server fd nonblocking";
     if (err == READING_RECV) msg = "Error: reading recv";
     Utils::print(CR, msg);
     return (1);

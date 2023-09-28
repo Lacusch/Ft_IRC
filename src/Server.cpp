@@ -85,6 +85,9 @@ int Server::start_server() {
     server_adress.sin_port = htons(_iport);
     server_adress.sin_addr.s_addr = INADDR_ANY;
 
+    if (fcntl(server_socket_fd, F_SETFL, O_NONBLOCK) == -1)
+        return (Utils::print_error(FCNTL_ERROR));
+
     if (bind(server_socket_fd, (struct sockaddr*)&server_adress, sizeof(server_adress)) == -1) {
         close(server_socket_fd);
         return (Utils::print_error(BINDING_SOCKET));

@@ -16,6 +16,8 @@ int Server::sendMessage(int fd, Res res, Request req) {
 int Server::handlePassword(int fd, Request req) {
     if (req.getParams().size() < 1) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (req.getParams().size() > 1) return (sendMessage(fd, ENOUGH_PARAMS, req));
+    if (!req.getTrailing().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    if (!req.getPrefix().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     if (_clients[fd]->isAuthenticated()) return (sendMessage(fd, USER_ALREADY_AUTHENTICATED, req));
     if (req.getParams().size() == 1 && req.getParams()[0] != this->getPassword())
         return (sendMessage(fd, INCORRERCT_PASSWORD, req));
@@ -43,6 +45,7 @@ void Server::updateOpNickName(Client *client, std::string newNickName) {
 int Server::handleNickName(int fd, Request req) {
     if (req.getParams().size() < 1) return (sendMessage(fd, NO_NICKNAME_GIVEN, req));
     if (req.getParams().size() > 1) return (sendMessage(fd, ENOUGH_PARAMS, req));
+    if (!req.getTrailing().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string nickname = req.getParams()[0];
     for (size_t i = 0; i < nickname.size(); i++) {
         if (!(std::isalnum(nickname[i]) || nickname[i] == '-' || nickname[i] == '_' ||
@@ -88,7 +91,7 @@ int Server::handleUser(int fd, Request req) {
     if (req.getParams()[2].length() > 20) return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
     if (hasTrailing && req.getTrailing().length() > 20)
         return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
-    else if (req.getParams()[3].length() > 20)
+    else if (!hasTrailing && req.getParams()[3].length() > 20)
         return (sendMessage(fd, ERR_USERNAME_TOO_LONG, req));
 
     _clients[fd]->setRegistration(true);
@@ -193,6 +196,7 @@ int Server::sendRegisteredUsers(int fd, Request req, Channel *channel) {
 }
 
 int Server::handleJoinChannel(int fd, Request req) {
+    if (!req.getTrailing().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     Utils::parse_join_msg(req);
     std::vector<std::pair<std::string, std::string> > joinCommands = req.getJoinParams();
     if (joinCommands.empty()) sendMessage(fd, NOT_ENOUGH_PARAMS, req);
@@ -377,6 +381,7 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
     if (req.getParams().size() < 2) {
         return sendMessage(fd, NOT_ENOUGH_PARAMS, req);
     }
+    if (!req.getTrailing().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string mode = req.getParams()[1];
     if (mode.length() != 2) return (sendMessage(fd, ERR_UNKNOWNMODE, req));
 
@@ -445,6 +450,7 @@ int Server::handleKick(int fd, Request req) {
 
 int Server::handleInvite(int fd, Request req) {
     if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
+    if (!req.getTrailing().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string channel_name = Utils::to_lower(req.getParams()[1]);
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 
@@ -534,6 +540,7 @@ int Server::handleQuit(int fd) {
 
 int Server::handleRollDie(int fd, Request req) {
     if (req.getParams().size() != 1) return (sendMessage(fd, BOT_USAGE, req));
+    if (!req.getTrailing().empty()) return (sendMessage(fd, BOT_USAGE, req));
 
     std::string clientInput = req.getParams()[0];
     unsigned int sides = static_cast<unsigned int>(std::atoi(clientInput.c_str()));

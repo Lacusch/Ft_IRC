@@ -3,8 +3,9 @@
 
 #include "../incl/Utils.hpp"
 
-Client::Client(int fd)
+Client::Client(int fd, std::string host)
     : _fd(fd),
+      _host(host),
       _isAuthenticated(false),
       _isRegistered(false),
       _hasNickname(false),
@@ -37,6 +38,8 @@ void Client::setWelcomeMessageDelivered(bool delivered) { _welcomeMessageDeliver
 std::string Client::getNickName(void) const { return (_nickName); }
 
 std::string Client::getUserName(void) const { return (_userName); }
+
+std::string Client::getHost(void) const { return (_host); }
 
 int Client::getFd(void) const { return (_fd); }
 

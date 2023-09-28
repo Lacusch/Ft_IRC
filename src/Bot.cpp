@@ -1,6 +1,6 @@
 #include "../incl/Bot.hpp"
 
-Bot::Bot(int fd) : Client(fd) {
+Bot::Bot(int fd) : Client(fd, "127.0.0.1") {
     this->_nickName = BOT_NICKNAME;
     this->_userName = BOT_USERNAME;
     this->_realName = BOT_REALNAME;

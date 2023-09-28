@@ -5,6 +5,7 @@
 class Client {
    protected:
     int _fd;
+    std::string _host;
     bool _isAuthenticated;
     bool _isRegistered;
     bool _hasNickname;
@@ -15,7 +16,7 @@ class Client {
     std::string _msgBuffer;
 
    public:
-    Client(int fd);
+    Client(int fd, std::string host);
     Client(const Client &rhs);
     Client &operator=(const Client &rhs);
     virtual ~Client();
@@ -36,6 +37,7 @@ class Client {
     void setNickName(std::string nickname);
     std::string getNickName(void) const;
     std::string getUserName(void) const;
+    std::string getHost(void) const;
     int getFd(void) const;
     bool getWelcomeMessageDelivered(void) const;
 };

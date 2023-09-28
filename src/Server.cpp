@@ -140,8 +140,10 @@ int Server::newClient() {
         newClientPollFd.fd = newClientSocket;
         newClientPollFd.events = POLLIN;
         _sockets.push_back(newClientPollFd);
-        Utils::print(CB, "client connected on FD: " + Utils::to_string(newClientPollFd.fd) + "\n");
-        _clients[newClientPollFd.fd] = new Client(newClientPollFd.fd);
+        std::string user_host = inet_ntoa(clientAddress.sin_addr);
+        Utils::print(CB, "client connected on FD: " + Utils::to_string(newClientPollFd.fd) + " @" +
+                             user_host + "\n");
+        _clients[newClientPollFd.fd] = new Client(newClientPollFd.fd, user_host);
     }
     return (0);
 }

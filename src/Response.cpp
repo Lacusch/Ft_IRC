@@ -64,7 +64,7 @@ std::string Server::create_response(int fd, Res res, Request req) {
         case RPL_WELCOME:
             msg = ":" + this->getName() + " 001 " + client_recipient(client) +
                   " :Welcome to the Internet Relay Network " + client->getNickName() + "!" +
-                  client->getUserName() + "@127.0.0.1\r\n";
+                  client->getUserName() + "@" + client->getHost() + "\r\n";
             break;
         case RPL_YOURHOST:
             msg = ":" + this->getName() + " 002 " + client_recipient(client) + " :Your host is " +
@@ -76,12 +76,12 @@ std::string Server::create_response(int fd, Res res, Request req) {
             break;
         case NICKNAME_REGISTERED:
             msg = ":" + (client->getNickName().size() ? client->getNickName() : "*") + "!" +
-                  (client->getUserName().size() ? client->getUserName() : "*") + "@127.0.0.1" +
-                  " NICK " + req.getParams()[0] + "\r\n";
+                  (client->getUserName().size() ? client->getUserName() : "*") + "@" +
+                  client->getHost() + " NICK " + req.getParams()[0] + "\r\n";
             break;
         case SEND_PRIVATE_MESSAGE:
-            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
-                  "@127.0.0.1" + " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() +
+            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() + "@" +
+                  client->getHost() + " PRIVMSG " + req.getParams()[0] + " :" + req.getTrailing() +
                   "\r\n";
             break;
         case UNKNWON_COMMAND:
@@ -101,8 +101,8 @@ std::string Server::create_response(int fd, Res res, Request req) {
                   req.getParams()[0] + " :No such nick/channel" + "\r\n";
             break;
         case JOIN_CHANNEL:
-            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
-                  "@127.0.0.1 " + "JOIN " + req.getParams()[0] + "\r\n";
+            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() + "@" +
+                  client->getHost() + " JOIN " + req.getParams()[0] + "\r\n";
             break;
         case BAD_CHANNEL_STRUCTURE:
             msg = ":" + this->getName() + " 401 " + client_recipient(client) + " " +
@@ -113,8 +113,9 @@ std::string Server::create_response(int fd, Res res, Request req) {
                   req.getParams()[0] + " :" + req.getTrailing() + "\r\n";
             break;
         case WHO_CHANNEL:
-            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() +
-                  "@127.0.0.0 " + this->getName() + " " + _clients[fd]->getNickName() + " 1 \r\n";
+            msg = ":" + _clients[fd]->getNickName() + "!" + _clients[fd]->getUserName() + "@" +
+                  client->getHost() + " " + this->getName() + " " + _clients[fd]->getNickName() +
+                  " 1 \r\n";
             break;
         case ERR_UNKNOWNMODE:
             msg = ":" + this->getName() + " 472 " + client_recipient(client) + " " +
@@ -200,8 +201,9 @@ std::string Server::create_response(int fd, Res res, Request req) {
                   " :No such channel" + "\r\n";
             break;
         case RPL_PARTED:
-            msg = ":" + client->getNickName() + "!" + client->getUserName() + "@127.0.0.1 " +
-                  " PART " + req.getParams()[0] + " :Leaving the channel" + "\r\n";
+            msg = ":" + client->getNickName() + "!" + client->getUserName() + "@" +
+                  client->getHost() + " PART " + req.getParams()[0] + " :Leaving the channel" +
+                  "\r\n";
             break;
         case ERR_NICKNAME_FOR_BOT:
             msg = ":" + this->getName() + " 433 " + client_recipient(client) +

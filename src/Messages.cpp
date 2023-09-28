@@ -53,7 +53,8 @@ int Server::handleNickName(int fd, Request req) {
             return (sendMessage(fd, ERRONEOUS_NICKNAME, req));
     }
     if (nickname.length() > 10) return (sendMessage(fd, ERR_NICKNAME_TOO_LONG, req));
-    if (Utils::to_lower(nickname) == Utils::to_lower(BOT_NICKNAME)) return (sendMessage(fd, ERR_NICKNAME_FOR_BOT, req));
+    if (Utils::to_lower(nickname) == Utils::to_lower(BOT_NICKNAME))
+        return (sendMessage(fd, ERR_NICKNAME_FOR_BOT, req));
     if (this->nickNameInUse(nickname)) return (sendMessage(fd, NICKNAME_IN_USE, req));
     updateOpNickName(_clients[fd], nickname);
     if (_clients[fd]->getWelcomeMessageDelivered() && _clients[fd]->isRegistered() &&
@@ -163,13 +164,15 @@ int Server::broadcastQuitMsg(int fd, Channel *channel) {
     std::map<int, Client *>::iterator it;
     std::string quittedClientNick;
     std::string quittedClientName;
+    std::string quittedClientHost;
     for (it = members.begin(); it != members.end(); ++it) {
         Client *idx_member = it->second;
         quittedClientNick = _clients[fd]->getNickName();
         quittedClientName = _clients[fd]->getUserName();
+        quittedClientHost = _clients[fd]->getHost();
         std::string quitMsg;
-        quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@127.0.0.1 " + " PART #" +
-                  channel->getName() + " :Quitted" + "\r\n";
+        quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@" + quittedClientHost +
+                  " PART #" + channel->getName() + " :Quitted" + "\r\n";
         send(idx_member->getFd(), quitMsg.c_str(), quitMsg.size(), 0);
         Utils::print_res(idx_member->getFd(), Utils::irc_trim(quitMsg));
     };
@@ -552,8 +555,9 @@ int Server::handleRollDie(int fd, Request req) {
         Bot rollDieBot(-1);
         std::string clientRoll = rollDieBot.rollDie(sides);
         std::string response_msg = ":" + rollDieBot.getNickName() + "!" + rollDieBot.getUserName() +
-                                   "@127.0.0.1" + " PRIVMSG " + _clients[fd]->getNickName() +
-                                   " :You have rolled  " + clientRoll + "\r\n";
+                                   "@" + rollDieBot.getHost() + " PRIVMSG " +
+                                   _clients[fd]->getNickName() + " :You have rolled  " +
+                                   clientRoll + "\r\n";
         send(fd, response_msg.c_str(), response_msg.size(), 0);
         Utils::print_res(fd, Utils::irc_trim(response_msg));
     }

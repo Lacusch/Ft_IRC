@@ -117,8 +117,8 @@ int Server::handlePrivateMsg(int fd, Request req) {
     int recipient_fd = this->getFdFromNickName(req.getParams()[0]);
     if (recipient_fd == -1 && req.getParams()[0][0] == '#') {
         std::string channel_name = Utils::to_lower(req.getParams()[0].substr(1));
-        Channel *ch = getChannel(channel_name);
-        if (ch == NULL) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
+        if (!channelExists(channel_name)) return (sendMessage(fd, ERR_NOSUCHCHANNEL, req));
+        Channel *ch = _channels[channel_name];
         if (!ch->isMember(_clients[fd], fd)) return (sendMessage(fd, ERR_NOTONCHANNEL, req));
         return (handleChannelMessage(fd, req));
     }
@@ -378,25 +378,20 @@ Res Server::handleKeyMode(Request req, Channel *ch) {
 }
 
 int Server::handleChannelMode(int fd, Request req, Channel *ch) {
-    if (req.getParams().size() < 2) {
-        return sendMessage(fd, NOT_ENOUGH_PARAMS, req);
-    }
+    if (req.getParams().size() < 2) return sendMessage(fd, NOT_ENOUGH_PARAMS, req);
     if (!req.getTrailing().empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
     std::string mode = req.getParams()[1];
     if (mode.length() != 2) return (sendMessage(fd, ERR_UNKNOWNMODE, req));
-
     if (mode[0] != '+' && mode[0] != '-') return (sendMessage(fd, ERR_UNKNOWNMODE, req));
 
     Res response;
-
     Client *target = NULL;
     switch (mode[1]) {
         case 'o':
             if (req.getParams().size() != 3) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             if (req.getParams()[2].empty()) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
             target = ch->getClientByNickName(this->getClientsList(), req.getParams()[2]);
-            if (target == NULL && req.getParams().size() == 3)
-                return (sendMessage(fd, ERR_NOSUCHNICK, req));
+            if (!target) return (sendMessage(fd, ERR_NOSUCHNICK, req));
             response = handleOperatorMode(target, req, ch);
             break;
         case 'k':
@@ -421,7 +416,7 @@ int Server::handleChannelMode(int fd, Request req, Channel *ch) {
 
 int Server::handleKick(int fd, Request req) {
     if (req.getParams().size() != 2) return (sendMessage(fd, NOT_ENOUGH_PARAMS, req));
-    std::string channel_name = req.getParams()[0];
+    std::string channel_name = Utils::to_lower(req.getParams()[0]);
     if (channel_name[0] != '#') return (sendMessage(fd, BAD_CHANNEL_STRUCTURE, req));
 
     channel_name = channel_name.substr(1);

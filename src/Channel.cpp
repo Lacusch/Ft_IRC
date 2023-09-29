@@ -17,7 +17,7 @@ Channel::~Channel() {}
 //  Channel Methods
 // ------------------------------------------------------------
 bool Channel::join(Client* client, int fd) {
-    if (isMember(client, fd)) return (false);  // Client is already in the channel
+    if (isMember(client, fd)) return (false);
 
     _members[fd] = client;  // Add the client to the list of members
 
@@ -34,13 +34,13 @@ bool Channel::join(Client* client, int fd) {
 }
 
 bool Channel::invite(Client* client, int fd) {
-    if (isMember(client, fd)) return (false);  // Client is already in the channel
+    if (isMember(client, fd)) return (false);
     addToInvitedList(client);
     return (true);
 }
 
 bool Channel::leave(Client* client, int fd) {
-    if (!isMember(client, fd)) return (false);  // Client is not in the channel
+    if (!isMember(client, fd)) return (false);
     if (userIsChannelOp(client)) {
         this->modifyOpsPrivileges(client, '-');
     }

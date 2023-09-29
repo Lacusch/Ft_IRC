@@ -177,10 +177,12 @@ int Server::broadcastQuitMsg(int fd, Channel *channel) {
         quittedClientName = _clients[fd]->getUserName();
         quittedClientHost = _clients[fd]->getHost();
         std::string quitMsg;
-        quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@" + quittedClientHost +
-                  " PART #" + channel->getName() + " :Quitted" + "\r\n";
-        send(idx_member->getFd(), quitMsg.c_str(), quitMsg.size(), 0);
-        Utils::print_res(idx_member->getFd(), Utils::irc_trim(quitMsg));
+        if (idx_member->getFd() != fd) {
+            quitMsg = ":" + quittedClientNick + "!" + quittedClientName + "@" + quittedClientHost +
+                    " PART #" + channel->getName() + " :Quitted" + "\r\n";
+            send(idx_member->getFd(), quitMsg.c_str(), quitMsg.size(), 0);
+            Utils::print_res(idx_member->getFd(), Utils::irc_trim(quitMsg));
+        }
     };
     return (0);
 }

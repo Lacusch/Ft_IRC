@@ -500,7 +500,7 @@ int Server::handleTopic(int fd, Request req) {
         if (!ch->userIsChannelOp(_clients[fd])) return (sendMessage(fd, ERR_CHANOPRIVSNEEDED, req));
     }
     std::string topic = req.getTrailing();
-    ch->setTopic(req.getTrailing());
+    if (!ch->setTopic(topic)) return (sendMessage(fd, ERR_BAD_TOPIC, req));
 
     return (broadcastChannel(fd, req, ch, TOPIC_SET));
 }

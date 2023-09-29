@@ -170,10 +170,6 @@ std::string Server::create_response(int fd, Res res, Request req) {
             msg = ":" + this->getName() + " 331 " + client_recipient(client) + " " +
                   req.getParams()[0] + " :No topic is set" + "\r\n";
             break;
-        case RPL_TOPIC:
-            msg = ":" + this->getName() + " 332 " + client_recipient(client) + " " +
-                  req.getParams()[0] + " : " + req.getParams()[1] + "\r\n";
-            break;
         case ERR_CHANNELISFULL:
             msg = ":" + this->getName() + " 471 " + client_recipient(client) + " " +
                   (req.getParams()[0][0] == '#' ? req.getParams()[0] : req.getParams()[1]) +
@@ -221,6 +217,10 @@ std::string Server::create_response(int fd, Res res, Request req) {
         case BOT_USAGE:
             msg = ":" + this->getName() + " 461 " + client_recipient(client) +
                   " : Usage: <ROLL> <die_number_of_sides> ( min 2, max 10 )\r\n";
+            break;
+        case ERR_BAD_TOPIC:
+            msg = ":" + this->getName() + " 461 " + client_recipient(client) +
+                  " : Invalid topic\r\n";
             break;
         case PONG_RESPONSE:
             msg = "PONG " + req.getTrailing() + "\r\n";

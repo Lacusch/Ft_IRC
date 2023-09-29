@@ -177,6 +177,14 @@ bool Channel::isTopicValid(const std::string& topic) {
     // check if topic has no line breaks
     if (topic.find('\n') != std::string::npos) return (false);
     if (topic.empty()) return (false);
+    std::vector<std::string> strArr = Utils::splitString(topic, ' ');
+    if (strArr.size() == 0) return (false);
+    bool tabsOnly = true;
+    for (size_t i = 0; i < strArr.size(); ++i) {
+        if (Utils::splitString(strArr[i], '\t').size() > 0) tabsOnly = false;
+    }
+    strArr.clear();
+    if (tabsOnly) return false;
 
     return (true);
 }

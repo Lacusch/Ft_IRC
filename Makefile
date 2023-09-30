@@ -39,5 +39,6 @@ clean:
 fclean: clean
 	@$(RM) $(NAME)
 	@printf "$(CURSIVE)$(RED)- Executable removed.$(RESET)\n"
-
+irc:
+	@printf "Check out this link to download IRC:\n$(GREEN)https://www.kvirc.net/?id=releases&platform=macosx&version=5.0.0&lang=en\n$(RESET)"
 re: fclean all

@@ -2,14 +2,14 @@ NAME			= ircserv
 
 CC				= c++
 RM				= rm -rf
-FLAGS			= -Wall -Wextra -Werror -std=c++98
+FLAGS			= -Wall -Wextra -Werror -std=c++98 -g
 
 SRCPATH 	= ./src
 INCLPATH 	= ./incl
 
 OBJDIR 		= .obj
-FILES			= main Utils Server
-INCLUDES  = Utils Server
+FILES			= main Utils Server ServerUtils Client Request Messages Response Channel Bot
+INCLUDES  = Utils Server Client Request
 
 SRC 			= $(addprefix $(SRCPATH)/, $(addsuffix .cpp, $(FILES)))
 OBJ				= $(addprefix $(OBJDIR)/, $(FILES:=.o))

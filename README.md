@@ -3,7 +3,7 @@
 > ***The project was aimed at developing an Internet Relay Chat (IRC) server. The server is intended to work on a localhost. Being a text-based communication protocol, the IRC network allows for real-time direct messages as well as group messages within channels. This server facilitates these exchanges by allowing IRC clients to connect and interact in these channels***
 
 ## Approach
-The server should meet requirements including handling multiple clients simultaneously without hanging, all I/O operations being non-blocking, usage of only a single poll function for handling operations, and support for a range of command operations. The project's approach involves achieving the following functionalities with programming in C++98:
+The project's approach involves achieving the following functionalities with programming in C++98:
 
 1. **Server Handling:** Program the server to manage multiple clients simultaneously without hanging. Implement necessary checks to ensure the server never crashes or quits unexpectedly. 
 

@@ -23,7 +23,7 @@ The compiled server will be tested using an IRC client. It will be connected usi
 Our server was tested with `KVIRC` IRC client program.
 
 
-### Usage
+## Usage
 To run the program you need to compile the source files using the provided Makefile and execute the resulting `ircserv` file:
 
 Compile: `make`
@@ -34,6 +34,10 @@ Run: `./ircserv <port> <password>`
 Your server is now listening for incoming connections on port `6667`.
 To interact with the server, you will need an IRC client. For this project, we have tested the server using the `KVIRC` client program.
 
+#### Run server with Valgrind && Docker
+
+docker build -t irc .
+docker run -p 6667:6667 irc
 
 ## IRC Commands
 #### Some of the commands you can use with this server:
@@ -54,6 +58,9 @@ To interact with the server, you will need an IRC client. For this project, we h
   - Set/remove the channel key (password): /mode #channel_name +k key/-k
   - Give/take channel operator privilege: /mode #channel_name +o username/-o username
   - Set/remove the user limit to channel /mode #channel_name +l limit_number/-l
+
+![alt text](./img/img2.png)
+![alt text](./img/img1.png)
 
 ### Authors
 

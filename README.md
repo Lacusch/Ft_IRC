@@ -31,7 +31,6 @@ Compile: `make`
 Run: `./ircserv <port> <password>`
 
 
-Your server is now listening for incoming connections on port `6667`.
 To interact with the server, you will need an IRC client. For this project, we have tested the server using the `KVIRC` client program.
 
 #### Run server with Valgrind && Docker

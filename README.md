@@ -35,8 +35,9 @@ To interact with the server, you will need an IRC client. For this project, we h
 
 #### Run server with Valgrind && Docker
 
-docker build -t irc .
-docker run -p 6667:6667 irc
+`docker build -t irc .`
+
+`docker run -p 6667:6667 irc`
 
 ## IRC Commands
 #### Some of the commands you can use with this server:

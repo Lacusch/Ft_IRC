@@ -1,6 +1,6 @@
 # FT_IRC - Creating an IRC Server
 
-> ***The project was aimed at developing an Internet Relay Chat (IRC) server. The server is intended to work on a localhost. Being a text-based communication protocol, the IRC network allows for real-time direct messages as well as group messages within channels. This server facilitates these exchanges by allowing IRC clients to connect and interact in these channels***
+> ***The project is aimed at developing an Internet Relay Chat (IRC) server. The server is intended to work on a localhost. Being a text-based communication protocol, the IRC network allows for real-time direct messages as well as group messages within channels. This server facilitates these exchanges by allowing IRC clients to connect and interact in these channels***
 
 ## Approach
 The project's approach involves achieving the following functionalities with programming in C++98:
